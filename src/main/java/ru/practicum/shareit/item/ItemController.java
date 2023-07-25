@@ -22,10 +22,12 @@ public class ItemController {
     public ItemController(ItemService itemService) {
         this.itemService = itemService;
     }
+
     @PostMapping
-    public ItemDto createItem(@Valid @RequestBody ItemDto itemDto, @RequestHeader(OWNER_ID) int ownerId){
+    public ItemDto createItem(@Valid @RequestBody ItemDto itemDto, @RequestHeader(OWNER_ID) int ownerId) {
         return itemService.createItem(itemDto, ownerId);
     }
+
     @DeleteMapping("/{id}")
     public void delete(@PathVariable("id") int id, @RequestHeader(OWNER_ID) int ownerId) {
         itemService.deleteItem(id, ownerId);

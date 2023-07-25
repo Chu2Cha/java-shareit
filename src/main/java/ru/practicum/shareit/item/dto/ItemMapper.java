@@ -15,6 +15,7 @@ public class ItemMapper {
                 item.getRequest() != null ? item.getRequest() : null
         );
     }
+
     public Item toItem(ItemDto itemDto, int ownerId) {
         return new Item(
                 itemDto.getId(),

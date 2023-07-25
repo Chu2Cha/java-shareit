@@ -6,8 +6,8 @@ import java.util.List;
 
 public interface ItemService {
     List<ItemDto> getAllItems();
-    ItemDto createItem(ItemDto itemDto, int ownerId);
 
+    ItemDto createItem(ItemDto itemDto, int ownerId);
 
     ItemDto updateItem(ItemDto itemDto, int id);
 

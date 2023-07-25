@@ -2,8 +2,6 @@ package ru.practicum.shareit.user.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import org.springframework.beans.factory.annotation.Autowired;
-
 import javax.validation.constraints.Email;
 import javax.validation.constraints.NotBlank;
 

@@ -22,6 +22,7 @@ public class UserController {
     public UserController(UserService userService) {
         this.userService = userService;
     }
+
     @GetMapping
     public List<UserDto> getAllUsers() {
         return userService.getAllUsers();
@@ -31,14 +32,17 @@ public class UserController {
     public UserDto saveNewUser(@Valid @RequestBody UserDto userDto) {
         return userService.saveUser(userDto);
     }
+
     @DeleteMapping("/{id}")
     public void delete(@PathVariable("id") int id) {
         userService.removeUser(id);
     }
+
     @PatchMapping("/{id}")
     public UserDto update(@RequestBody UserDto userDto, @PathVariable int id) {
-        return userService.updateUser(userDto,id);
+        return userService.updateUser(userDto, id);
     }
+
     @GetMapping("/{id}")
     public UserDto getUser(@PathVariable("id") int id) {
         return userService.getUser(id);
