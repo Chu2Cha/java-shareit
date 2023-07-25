@@ -1,12 +1,11 @@
 package ru.practicum.shareit.user.service;
 
 import org.springframework.stereotype.Service;
-import ru.practicum.shareit.exceptions.EmailAlreadyExistsException;
+import ru.practicum.shareit.exceptions.ConflictException;
 import ru.practicum.shareit.exceptions.NotFoundException;
 import ru.practicum.shareit.user.dto.UserDto;
 import ru.practicum.shareit.user.dto.UserMapper;
 import ru.practicum.shareit.user.model.User;
-import ru.practicum.shareit.user.service.UserService;
 
 
 import java.util.*;
@@ -79,7 +78,7 @@ public class UserServiceImpl implements UserService {
                 .filter(u -> u.getId() != userDto.getId())
                 .anyMatch(u -> u.getEmail().equals(userDto.getEmail()));
         if (emailExists) {
-            throw new EmailAlreadyExistsException("Электронная почта уже занята!");
+            throw new ConflictException("Электронная почта уже занята!");
         }
     }
 }
