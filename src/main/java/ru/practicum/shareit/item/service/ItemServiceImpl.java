@@ -62,8 +62,8 @@ public class ItemServiceImpl implements ItemService {
 
     @Override
     public ItemDto getItem(int id, int ownerId) {
-        Item item = itemOwnerValidation(id, ownerId);
-        return itemMapper.toItemDto(item);
+        userService.getUser(ownerId);  // выбрасывает ошибку, если неавторизованный пользователь зайдет.
+        return itemMapper.toItemDto(items.get(id));
     }
 
     @Override
@@ -74,6 +74,7 @@ public class ItemServiceImpl implements ItemService {
 
     @Override
     public List<ItemDto> searchItem(String message, int ownerId) {
+        userService.getUser(ownerId);
         if (message == null || message.trim().isEmpty()) {
             return new ArrayList<>();
         }
