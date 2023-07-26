@@ -12,7 +12,7 @@ public class ErrorHandler {
     @ExceptionHandler
     @ResponseStatus(HttpStatus.CONFLICT)
     public ErrorResponse handleValidationException(final ConflictException e) {
-        log.error(HttpStatus.BAD_REQUEST.toString(), e);
+        log.error(HttpStatus.CONFLICT.toString(), e);
         return new ErrorResponse(e.getMessage());
     }
 
