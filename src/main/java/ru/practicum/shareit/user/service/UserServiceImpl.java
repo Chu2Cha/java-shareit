@@ -6,6 +6,7 @@ import ru.practicum.shareit.exceptions.NotFoundException;
 import ru.practicum.shareit.user.dto.UserDto;
 import ru.practicum.shareit.user.dto.UserMapper;
 import ru.practicum.shareit.user.model.User;
+import ru.practicum.shareit.user.repository.UserRepository;
 
 
 import java.util.*;
@@ -13,19 +14,17 @@ import java.util.stream.Collectors;
 
 @Service
 public class UserServiceImpl implements UserService {
-    private final Map<Integer, User> users;
-    private final UserMapper userMapper;
-    private Integer currentId;
 
-    public UserServiceImpl(UserMapper userMapper) {
-        this.userMapper = userMapper;
-        users = new HashMap<>();
-        currentId = 1;
+    private final UserRepository userRepository;
+    private final UserMapper userMapper = new UserMapper();
+
+    public UserServiceImpl(UserRepository userRepository) {
+        this.userRepository = userRepository;
     }
 
     @Override
     public List<UserDto> getAllUsers() {
-        return users.values().stream()
+        return userRepository.getAllUsers().stream()
                 .map(userMapper::toUserDto)
                 .collect(Collectors.toList());
     }
@@ -33,16 +32,13 @@ public class UserServiceImpl implements UserService {
     @Override
     public UserDto saveUser(UserDto userDto) {
         checkEmailInStorage(userDto);
-        userDto.setId(currentId++);
-        User user = userMapper.toUser(userDto);
-        users.put(user.getId(), user);
-        return userDto;
+        return userMapper.toUserDto(userRepository.saveUser(userMapper.toUser(userDto)));
     }
 
     @Override
     public void removeUser(int id) {
         findUserById(id);
-        users.remove(id);
+        userRepository.removeUser(id);
     }
 
     @Override
@@ -57,8 +53,8 @@ public class UserServiceImpl implements UserService {
             userDto.setEmail(userFromStorage.getEmail());
         }
         User user = userMapper.toUser(userDto);
-        users.put(user.getId(), user);
-        return userDto;
+        userRepository.updateUser(user);
+        return userMapper.toUserDto(userRepository.updateUser(userMapper.toUser(userDto)));
     }
 
     @Override
@@ -69,15 +65,12 @@ public class UserServiceImpl implements UserService {
 
 
     private User findUserById(int id) {
-        return Optional.ofNullable(users.get(id))
+        return Optional.ofNullable(userRepository.getUser(id))
                 .orElseThrow(() -> new NotFoundException("Пользователь с id " + id + " не найден."));
     }
 
     private void checkEmailInStorage(UserDto userDto) {
-        boolean emailExists = users.values().stream()
-                .filter(u -> u.getId() != userDto.getId())
-                .anyMatch(u -> u.getEmail().equals(userDto.getEmail()));
-        if (emailExists) {
+        if (userRepository.checkEmail(userDto.getId(), userDto.getEmail())) {
             throw new ConflictException("Электронная почта уже занята!");
         }
     }

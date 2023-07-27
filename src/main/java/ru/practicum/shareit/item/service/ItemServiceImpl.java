@@ -5,6 +5,7 @@ import ru.practicum.shareit.exceptions.NotFoundException;
 import ru.practicum.shareit.item.dto.ItemDto;
 import ru.practicum.shareit.item.dto.ItemMapper;
 import ru.practicum.shareit.item.model.Item;
+import ru.practicum.shareit.item.repository.ItemRepository;
 import ru.practicum.shareit.user.service.UserService;
 
 import java.util.*;
@@ -12,23 +13,19 @@ import java.util.stream.Collectors;
 
 @Service
 public class ItemServiceImpl implements ItemService {
-    private final ItemMapper itemMapper;
+    private final ItemMapper itemMapper = new ItemMapper();
     private final UserService userService;
-    private final Map<Integer, Item> items;
-    private Integer currentId;
+    private final ItemRepository itemRepository;
 
 
-    public ItemServiceImpl(ItemMapper itemMapper, UserService userService) {
-        this.itemMapper = itemMapper;
+    public ItemServiceImpl(UserService userService, ItemRepository itemRepository) {
         this.userService = userService;
-        items = new HashMap<>();
-        currentId = 1;
+        this.itemRepository = itemRepository;
     }
 
     @Override
     public List<ItemDto> getAllItemsFromUser(int ownerId) {
-        return items.values().stream()
-                .filter(item -> item.getOwner() == ownerId)
+        return itemRepository.getAllItemsFromUser(ownerId).stream()
                 .map(itemMapper::toItemDto)
                 .collect(Collectors.toList());
     }
@@ -36,16 +33,13 @@ public class ItemServiceImpl implements ItemService {
     @Override
     public ItemDto createItem(ItemDto itemDto, int ownerId) {
         userService.getUser(ownerId);
-        itemDto.setId(currentId++);
-        Item item = itemMapper.toItem(itemDto, ownerId);
-        items.put(item.getId(), item);
-        return itemDto;
+        return itemMapper.toItemDto(itemRepository.createItem(itemMapper.toItem(itemDto, ownerId)));
     }
 
     @Override
     public ItemDto updateItem(ItemDto itemDto, int id, int ownerID) {
         Item itemFromStorage = itemOwnerValidation(id, ownerID);
-        itemDto.setId(itemFromStorage.getId());
+        itemDto.setId(id);
         if (itemDto.getName() == null) {
             itemDto.setName(itemFromStorage.getName());
         }
@@ -56,34 +50,36 @@ public class ItemServiceImpl implements ItemService {
             itemDto.setAvailable(itemFromStorage.getAvailable());
         }
         Item item = itemMapper.toItem(itemDto, ownerID);
-        items.put(item.getId(), item);
-        return itemDto;
+        return itemMapper.toItemDto(itemRepository.updateItem(item));
+
     }
 
     @Override
     public ItemDto getItem(int id, int ownerId) {
         userService.getUser(ownerId);  // выбрасывает ошибку, если неавторизованный пользователь зайдет.
-        return itemMapper.toItemDto(items.get(id));
+        return itemMapper.toItemDto(itemRepository.getItem(id));
     }
 
     @Override
     public void deleteItem(int id, int ownerId) {
-        Item item = itemOwnerValidation(id, ownerId);
-        items.remove(item.getId());
+        itemOwnerValidation(id, ownerId);
+        itemRepository.removeItem(id);
     }
 
     @Override
-    public List<ItemDto> searchItem(String message, int ownerId) {
+    public List<ItemDto> searchItems(String message, int ownerId) {
         userService.getUser(ownerId);
-        if (message == null || message.trim().isEmpty()) {
-            return new ArrayList<>();
+        if (checkEmptyMessage(message)) {
+            return Collections.emptyList();
         }
-        return items.values().stream()
-                .filter(item -> item.getAvailable() &&
-                        (item.getName().toLowerCase().contains(message.toLowerCase()) ||
-                                item.getDescription().toLowerCase().contains(message.toLowerCase())))
+        return itemRepository.searchItems(message, ownerId)
+                .stream()
                 .map(itemMapper::toItemDto)
                 .collect(Collectors.toList());
+    }
+
+    private boolean checkEmptyMessage(String message) {
+        return message == null || message.trim().isEmpty();
     }
 
     private Item itemOwnerValidation(int id, int ownerId) {
@@ -96,9 +92,8 @@ public class ItemServiceImpl implements ItemService {
     }
 
     private Item findItemById(int id) {
-        return Optional.ofNullable(items.get(id))
+        return Optional.ofNullable(itemRepository.getItem(id))
                 .orElseThrow(() -> new NotFoundException("Предмет с id " + id + " не найден."));
     }
-
 
 }

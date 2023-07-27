@@ -15,5 +15,5 @@ public interface ItemService {
 
     void deleteItem(int id, int ownerId);
 
-    List<ItemDto> searchItem(String message, int ownerId);
+    List<ItemDto> searchItems(String message, int ownerId);
 }

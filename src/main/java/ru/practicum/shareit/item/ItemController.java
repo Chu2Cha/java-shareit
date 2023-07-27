@@ -4,13 +4,9 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.shareit.item.dto.ItemDto;
 import ru.practicum.shareit.item.service.ItemService;
-
 import javax.validation.Valid;
 import java.util.List;
 
-/**
- * TODO Sprint add-controllers.
- */
 @RestController
 @Validated
 @RequestMapping("/items")
@@ -52,7 +48,7 @@ public class ItemController {
 
     @GetMapping("/search")
     public List<ItemDto> searchItem(@RequestParam("text") String message, @RequestHeader(OWNER_ID) int ownerId) {
-        return itemService.searchItem(message, ownerId);
+        return itemService.searchItems(message, ownerId);
     }
 
 }
