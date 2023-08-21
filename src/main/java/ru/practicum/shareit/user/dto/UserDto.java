@@ -8,7 +8,7 @@ import javax.validation.constraints.NotBlank;
 @Data
 @AllArgsConstructor
 public class UserDto {
-    private int id;
+    private long id;
     @NotBlank
     private String name;
     @Email
