@@ -13,7 +13,7 @@ CREATE TABLE IF NOT EXISTS requests
     description  VARCHAR(512)                            NOT NULL,
     requestor_id BIGINT                                  NOT NULL,
     created TIMESTAMP WITHOUT TIME ZONE,
-    CONSTRAINT pk_user PRIMARY KEY (id),
+    CONSTRAINT pk_request PRIMARY KEY (id),
     CONSTRAINT fk_requests_requestor_id FOREIGN KEY (requestor_id) REFERENCES users (id) ON DELETE CASCADE
 );
 
@@ -38,7 +38,7 @@ CREATE TABLE IF NOT EXISTS bookings
     item_id    BIGINT                                  NOT NULL,
     booker_id  BIGINT                                  NOT NULL,
     status     VARCHAR(255)                            NOT NULL,
-    CONSTRAINT pk_item PRIMARY KEY (id),
+    CONSTRAINT pk_booking PRIMARY KEY (id),
     CONSTRAINT fk_bookings_item_id FOREIGN KEY (item_id) REFERENCES items (id) ON DELETE CASCADE,
     CONSTRAINT fk_booking_booker_id FOREIGN KEY (booker_id) REFERENCES users (id) ON DELETE CASCADE
 );
@@ -49,7 +49,7 @@ CREATE TABLE IF NOT EXISTS comments
     text      VARCHAR(512)                            NOT NULL,
     item_id   BIGINT                                  NOT NULL,
     author_id BIGINT                                  NOT NULL,
-    CONSTRAINT pk_item PRIMARY KEY (id),
+    CONSTRAINT pk_comment PRIMARY KEY (id),
     CONSTRAINT fk_comments_item_id FOREIGN KEY (item_id) REFERENCES items (id) ON DELETE CASCADE,
     CONSTRAINT fk_comments_author_id FOREIGN KEY (author_id) references users (id) ON DELETE CASCADE
 )

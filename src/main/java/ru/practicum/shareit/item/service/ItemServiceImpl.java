@@ -19,11 +19,10 @@ public class ItemServiceImpl implements ItemService {
     private final UserService userService;
     private final ItemRepository itemRepository;
 
-
-
     @Override
     public List<ItemDto> getAllItemsFromUser(long ownerId) {
-        return itemRepository.findAllById(ownerId).stream()
+
+        return itemRepository.findAllByOwnerId(ownerId).stream()
                 .map(itemMapper::toItemDto)
                 .collect(Collectors.toList());
     }
@@ -38,8 +37,8 @@ public class ItemServiceImpl implements ItemService {
     }
 
     @Override
-    public ItemDto updateItem(ItemDto itemDto, long id, long ownerID) {
-        Item itemFromStorage = itemOwnerValidation(id, ownerID);
+    public ItemDto updateItem(ItemDto itemDto, long id, long ownerId) {
+        Item itemFromStorage = itemOwnerValidation(id, ownerId);
         itemDto.setId(id);
         if (itemDto.getName() == null) {
             itemDto.setName(itemFromStorage.getName());
@@ -51,30 +50,33 @@ public class ItemServiceImpl implements ItemService {
             itemDto.setAvailable(itemFromStorage.getAvailable());
         }
         Item item = itemMapper.toItem(itemDto);
-        return itemMapper.toItemDto(itemRepository.updateItem(item));
-
+        item.setOwnerId(ownerId);
+        return itemMapper.toItemDto(itemRepository.save(item));
     }
 
     @Override
-    public ItemDto getItem(long id, long ownerId) {
-        userService.getUser(ownerId);  // выбрасывает ошибку, если неавторизованный пользователь зайдет.
-        return itemMapper.toItemDto(itemRepository.getItem(id));
+    public ItemDto findById(long id, long ownerId) {
+        userService.findUserById(ownerId);  // выбрасывает ошибку, если неавторизованный пользователь зайдет.
+        return itemMapper.toItemDto(itemRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("Предмет с id " + id + " не найден.")));
     }
 
     @Override
     public void deleteItem(long id, long ownerId) {
         itemOwnerValidation(id, ownerId);
-        itemRepository.removeItem(id);
+        itemRepository.deleteById(id);
     }
 
     @Override
     public List<ItemDto> searchItems(String message, long ownerId) {
-        userService.getUser(ownerId);
+        userService.findUserById(ownerId);
         if (checkEmptyMessage(message)) {
             return Collections.emptyList();
         }
-        return itemRepository.searchItems(message, ownerId)
-                .stream()
+        return itemRepository.findAll().stream()
+                .filter(item -> item.getAvailable() &&
+                        (item.getName().toLowerCase().contains(message.toLowerCase()) ||
+                                item.getDescription().toLowerCase().contains(message.toLowerCase())))
                 .map(itemMapper::toItemDto)
                 .collect(Collectors.toList());
     }
@@ -84,17 +86,13 @@ public class ItemServiceImpl implements ItemService {
     }
 
     private Item itemOwnerValidation(long id, long ownerId) {
-        userService.getUser(ownerId);
-        Item item = findItemById(id);
-        if (item.getOwner() == ownerId) {
+        userService.findUserById(ownerId);
+        Item item = itemRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("Предмет с id " + id + " не найден."));
+        if (item.getOwnerId() == ownerId) {
             return item;
         }
         throw new NotFoundException("Предмет с id " + id + " и владельцем " + ownerId + " не найден.");
-    }
-
-    private Item findItemById(long id) {
-        return Optional.ofNullable(itemRepository.getItem(id))
-                .orElseThrow(() -> new NotFoundException("Предмет с id " + id + " не найден."));
     }
 
 }

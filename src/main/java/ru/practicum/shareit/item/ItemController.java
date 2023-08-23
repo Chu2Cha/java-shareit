@@ -31,7 +31,7 @@ public class ItemController {
 
     @GetMapping("/{id}")
     public ItemDto getItem(@PathVariable("id") long id, @RequestHeader(OWNER_ID) long ownerId) {
-        return itemService.getItem(id, ownerId);
+        return itemService.findById(id, ownerId);
     }
 
     @GetMapping
