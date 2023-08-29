@@ -1,4 +1,4 @@
-package ru.practicum.shareit.booking;
+package ru.practicum.shareit.booking.model;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -36,12 +36,7 @@ public class Booking {
     private User booker;
 
     @Enumerated(EnumType.STRING)
-    private Status status;
+    private BookingStatus status;
 
-    private enum Status {
-        WAITING,
-        APPROVED,
-        REJECTED,
-        CANCELED
-    }
+
 }
