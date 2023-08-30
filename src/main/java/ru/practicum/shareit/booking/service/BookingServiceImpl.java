@@ -5,7 +5,13 @@ import org.springframework.stereotype.Service;
 import ru.practicum.shareit.booking.dto.BookingDto;
 import ru.practicum.shareit.booking.dto.BookingMapper;
 import ru.practicum.shareit.booking.model.Booking;
+import ru.practicum.shareit.booking.model.BookingStatus;
 import ru.practicum.shareit.booking.repository.BookingRepository;
+import ru.practicum.shareit.item.dto.ItemMapper;
+import ru.practicum.shareit.item.model.Item;
+import ru.practicum.shareit.item.service.ItemService;
+import ru.practicum.shareit.user.dto.UserMapper;
+import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.service.UserService;
 
 import java.util.List;
@@ -18,13 +24,24 @@ public class BookingServiceImpl implements BookingService{
 
     private final BookingRepository bookingRepository;
     private final BookingMapper bookingMapper;
+    private final UserMapper userMapper;
+    private final ItemService itemService;
+    private final ItemMapper itemMapper;
 
     @Override
     public BookingDto createBooking(BookingDto bookingDto, long bookerId) {
         userService.findUserById(bookerId);
-        Booking booking =  bookingMapper.toBooking(bookingDto);
+        User booker = userMapper.toUser(userService.findUserById(bookerId));
+        Item item =  itemMapper.toItem(itemService.findById(bookingDto.getItem().getId(),bookerId));
+        Booking booking = Booking.builder()
+                .start(bookingDto.getStart())
+                .end(bookingDto.getEnd())
+                .item(item)
+                .booker(booker)
+                .status(BookingStatus.WAITING)
+                .build();
         bookingRepository.save(booking);
-        return bookingDto;
+        return bookingMapper.toBookingDto(booking);
     }
 
     @Override

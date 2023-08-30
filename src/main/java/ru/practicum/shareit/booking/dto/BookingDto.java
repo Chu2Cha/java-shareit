@@ -5,6 +5,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import ru.practicum.shareit.booking.model.BookingStatus;
+import ru.practicum.shareit.item.model.Item;
 
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
@@ -17,7 +18,6 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @NoArgsConstructor
 public class BookingDto {
-    @NotNull
     private Long id;
 
     @NotNull
@@ -28,11 +28,10 @@ public class BookingDto {
     @Future
     private LocalDateTime end;
 
-    @NotNull
     @Enumerated(EnumType.STRING)
     private BookingStatus status;
 
-    private Long itemId;
+    private Item item;
 
     private Long bookerId;
 
