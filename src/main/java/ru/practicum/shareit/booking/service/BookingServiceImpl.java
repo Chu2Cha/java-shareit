@@ -51,7 +51,6 @@ public class BookingServiceImpl implements BookingService {
         if (inBookingDto.getStart().isBefore(LocalDateTime.now())) {
             throw new BadRequestException("Дата начала бронирования раньше текущего момента!");
         }
-
         Item item = itemMapper.toItem(itemService.findById(inBookingDto.getItemId(), bookerId));
         if (item.getAvailable()) {
             Booking booking = Booking.builder()
@@ -61,6 +60,9 @@ public class BookingServiceImpl implements BookingService {
                     .booker(booker)
                     .status(BookingStatus.WAITING)
                     .build();
+            if(booking.getItem().getOwnerId()==bookerId){
+                throw new NotFoundException("Владелец не может бронировать собственную вещь!");
+            }
             bookingRepository.save(booking);
             return bookingMapper.toOutBookingDto(booking);
         } else
@@ -72,6 +74,12 @@ public class BookingServiceImpl implements BookingService {
     @Transactional
     public OutBookingDto approve(long bookingId, long bookerId, Boolean approved) {
         OutBookingDto booking = findById(bookingId, bookerId);
+        if (booking.getItem().getOwnerId() != bookerId) {
+            throw new NotFoundException("Только тот, кто бронирует, может менять статус.");
+        }
+        if(booking.getStatus()!=BookingStatus.WAITING){
+            throw new BadRequestException("Статус букинга не WAITING.");
+        }
         if (approved) {
             booking.setStatus(BookingStatus.APPROVED);
         } else {
@@ -95,8 +103,7 @@ public class BookingServiceImpl implements BookingService {
         if (booking.getBooker().getId() == bookerId || booking.getItem().getOwnerId() == bookerId) {
             return bookingMapper.toOutBookingDto(booking);
         } else {
-            throw new BadRequestException("Только владелец может смотреть бронирования!");
-
+            throw new NotFoundException("Только владелец или букинер может смотреть бронирования!");
         }
     }
 
@@ -148,38 +155,31 @@ public class BookingServiceImpl implements BookingService {
         userService.findUserById(ownerId);
         LocalDateTime now = LocalDateTime.now();
         List<Booking> bookingList;
-        String COMMON_QUERY = "SELECT b FROM Booking b "
-                + "INNER JOIN Item i ON b.item.id = i.id "
-                + "WHERE i.ownerId = :ownerId ";
         String query;
         switch (state) {
             case "ALL":
-                query = COMMON_QUERY + "ORDER BY b.start DESC";
-                bookingList= bookingRepository.findByItemOwnerIdOrderByEndDesc(ownerId);
+                bookingList= bookingRepository
+                        .findByItemOwnerIdOrderByEndDesc(ownerId);
                 break;
             case "CURRENT":
-                query = COMMON_QUERY + "AND :time between b.start AND b.end" + "ORDER BY b.end DESC";
-                bookingList = bookingRepository.findByItemOwnerIdAndStartIsAfterOrderByEndDesc(ownerId, now);
+                bookingList = bookingRepository
+                        .findAllByItemOwnerIdAndStartIsBeforeAndEndIsAfterOrderByEndDesc(ownerId, now, now);
                 break;
             case "PAST":
-                query = COMMON_QUERY + "AND :time > b.end" + "ORDER BY b.end DESC";
                 bookingList = bookingRepository
-                        .findByItemOwnerIdAndStartIsAfterOrderByEndDesc(ownerId, now);
+                        .findAllByItemOwnerIdAndEndIsBeforeOrderByEndDesc(ownerId, now);
                 break;
             case "FUTURE":
-                query = COMMON_QUERY + "AND :time > b.start" + "ORDER BY b.end DESC";
                 bookingList = bookingRepository
-                        .findByItemOwnerIdAndStartIsAfterOrderByEndDesc(ownerId, now);
+                        .findAllByItemOwnerIdAndStartIsAfterOrderByEndDesc(ownerId, now);
                 break;
             case "WAITING":
-                query = COMMON_QUERY + "AND b.status = :status"+ "ORDER BY b.end DESC";
                 bookingList = bookingRepository
-                        .findByItemOwnerIdAndStatusOrderByEndDesc(ownerId, BookingStatus.WAITING);
+                        .findAllByItemOwnerIdAndStatusOrderByEndDesc(ownerId, BookingStatus.WAITING);
                 break;
             case "REJECTED":
-                query = COMMON_QUERY + "AND b.status = :status"+ "ORDER BY b.end DESC";
                 bookingList = bookingRepository
-                        .findByItemOwnerIdAndStatusOrderByEndDesc(ownerId, BookingStatus.REJECTED);
+                        .findAllByItemOwnerIdAndStatusOrderByEndDesc(ownerId, BookingStatus.REJECTED);
                 break;
             default:
                 throw new BadRequestException("Unknown state: UNSUPPORTED_STATUS");
