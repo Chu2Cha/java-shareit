@@ -118,6 +118,9 @@ public class ItemServiceImpl implements ItemService {
 
     @Override
     public CommentDto addComment(long itemId, long userId, CommentDto commentDto) {
+        if(commentDto.getText().isEmpty() || commentDto.getText() == null){
+            throw new BadRequestException("Ошибка: пустой комментарий!");
+        }
         Item item = itemMapper.toItem(findById(itemId, userId));
         User author = userMapper.toUser(userService.findUserById(userId));
         LocalDateTime now = LocalDateTime.now();
@@ -129,14 +132,13 @@ public class ItemServiceImpl implements ItemService {
                         (itemId, userId, BookingStatus.CANCELED, now);
         List<Booking> bookings = Stream.concat(bookingsApproved.stream(), bookingsPast.stream())
                 .collect(Collectors.toList());
-        if(!bookings.isEmpty()){
+        if (!bookings.isEmpty()) {
             Comment comment = commentMapper.toComment(commentDto);
             comment.setAuthor(author);
             comment.setItem(item);
             comment.setCreated(now);
             return commentMapper.toCommentDto(commentRepository.save(comment));
-        }
-        else throw new BadRequestException(String.format("Не найден пользователь %d с предметом %d", userId, itemId));
+        } else throw new BadRequestException(String.format("Не найден пользователь %d с предметом %d", userId, itemId));
 
     }
 
@@ -158,10 +160,12 @@ public class ItemServiceImpl implements ItemService {
         List<Booking> bookings = bookingRepository.findAllByItemIdOrderByEndDesc(itemDto.getId());
         LocalDateTime now = LocalDateTime.now();
         Booking lastBooking = bookings.stream()
-                .filter(booking -> booking.getEnd().isBefore(now))
+                .filter(booking -> !(booking.getStatus().equals(BookingStatus.REJECTED)))
+                .filter(booking -> booking.getStart().isBefore(now))
                 .max(Comparator.comparing(Booking::getEnd))
                 .orElse(null);
         Booking nextBooking = bookings.stream()
+                .filter(booking -> !(booking.getStatus().equals(BookingStatus.REJECTED)))
                 .filter(booking -> booking.getStart().isAfter(now))
                 .min(Comparator.comparing(Booking::getStart))
                 .orElse(null);

@@ -23,7 +23,7 @@ public class Comment {
     private Long id;
 
     @NotEmpty
-    @Column(name = "text", nullable = false)
+    @Column(name = "comment_text", nullable = false)
     private String text;
 
     @ManyToOne(fetch = FetchType.LAZY)
