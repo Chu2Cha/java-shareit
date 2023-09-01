@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import ru.practicum.shareit.booking.model.Booking;
 import ru.practicum.shareit.request.ItemRequest;
 
 import javax.persistence.*;
@@ -36,5 +37,11 @@ public class Item {
     @ManyToOne
     @JoinColumn(name = "requester_id")
     private ItemRequest request;
+
+    @Transient
+    private Booking lastBooking;
+
+    @Transient
+    private Booking nextBooking;
 
 }

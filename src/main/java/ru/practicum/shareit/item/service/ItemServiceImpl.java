@@ -2,6 +2,9 @@ package ru.practicum.shareit.item.service;
 
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
+import ru.practicum.shareit.booking.dto.BookingMapper;
+import ru.practicum.shareit.booking.model.Booking;
+import ru.practicum.shareit.booking.repository.BookingRepository;
 import ru.practicum.shareit.exceptions.NotFoundException;
 import ru.practicum.shareit.item.dto.ItemDto;
 import ru.practicum.shareit.item.dto.ItemMapper;
@@ -9,6 +12,7 @@ import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.item.repository.ItemRepository;
 import ru.practicum.shareit.user.service.UserService;
 
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -18,13 +22,19 @@ public class ItemServiceImpl implements ItemService {
     private final ItemMapper itemMapper = new ItemMapper();
     private final UserService userService;
     private final ItemRepository itemRepository;
+    private final BookingRepository bookingRepository;
+    private final BookingMapper bookingMapper;
 
     @Override
     public List<ItemDto> getAllItemsFromUser(long ownerId) {
 
-        return itemRepository.findAllByOwnerId(ownerId).stream()
+        List<ItemDto> itemDtoList = itemRepository.findAllByOwnerId(ownerId).stream()
                 .map(itemMapper::toItemDto)
                 .collect(Collectors.toList());
+        for (ItemDto itemDto : itemDtoList){
+            updateBookings(itemDto);
+        }
+        return itemDtoList;
     }
 
     @Override
@@ -57,8 +67,12 @@ public class ItemServiceImpl implements ItemService {
     @Override
     public ItemDto findById(long id, long ownerId) {
         userService.findUserById(ownerId);  // выбрасывает ошибку, если неавторизованный пользователь зайдет.
-        return itemMapper.toItemDto(itemRepository.findById(id)
+        ItemDto itemDto = itemMapper.toItemDto(itemRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Предмет с id " + id + " не найден.")));
+        if(itemDto.getOwnerId() == ownerId){
+            updateBookings(itemDto);
+        }
+        return itemDto;
     }
 
     @Override
@@ -93,6 +107,25 @@ public class ItemServiceImpl implements ItemService {
             return item;
         }
         throw new NotFoundException("Предмет с id " + id + " и владельцем " + ownerId + " не найден.");
+    }
+
+    private void updateBookings(ItemDto itemDto) {
+        List<Booking> bookings = bookingRepository.findAllByItemIdOrderByEndDesc(itemDto.getId());
+        LocalDateTime now = LocalDateTime.now();
+        Booking lastBooking = bookings.stream()
+                .filter(booking -> booking.getEnd().isBefore(now))
+                .max(Comparator.comparing(Booking::getEnd))
+                .orElse(null);
+        Booking nextBooking = bookings.stream()
+                .filter(booking -> booking.getStart().isAfter(now))
+                .min(Comparator.comparing(Booking::getStart))
+                .orElse(null);
+        if (lastBooking != null) {
+            itemDto.setLastBooking(bookingMapper.toItemBookingDto(lastBooking));
+        }
+        if (nextBooking != null) {
+            itemDto.setNextBooking(bookingMapper.toItemBookingDto(nextBooking));
+        }
     }
 
 }

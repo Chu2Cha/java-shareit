@@ -20,12 +20,12 @@ public class BookingMapper {
                 .build();
     }
 
-    public Booking toBooking(OutBookingDto outBookingDto) {
-        return Booking.builder()
-                .id(outBookingDto.getId())
-                .start(outBookingDto.getStart())
-                .end(outBookingDto.getEnd())
-                .status(outBookingDto.getStatus())
+    public ItemBookingDto toItemBookingDto(Booking booking){
+        return ItemBookingDto.builder()
+                .id(booking.getId())
+                .start(booking.getStart())
+                .end(booking.getEnd())
+                .bookerId(booking.getBooker().getId())
                 .build();
     }
 }
