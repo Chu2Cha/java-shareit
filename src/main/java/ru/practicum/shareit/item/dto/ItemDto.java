@@ -4,10 +4,11 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import ru.practicum.shareit.booking.dto.ItemBookingDto;
-import ru.practicum.shareit.booking.dto.OutBookingDto;
+import ru.practicum.shareit.item.comment.dto.CommentDto;
 
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
+import java.util.List;
 
 @Data
 @Builder
@@ -24,4 +25,5 @@ public class ItemDto {
     private Long ownerId;
     private ItemBookingDto lastBooking;
     private ItemBookingDto nextBooking;
+    private List<CommentDto> comments;
 }
