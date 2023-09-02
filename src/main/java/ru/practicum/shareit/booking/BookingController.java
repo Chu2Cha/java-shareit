@@ -18,7 +18,6 @@ public class BookingController {
     private static final String BOOKER_ID = "X-Sharer-User-Id";
 
 
-
     public BookingController(BookingService bookingService) {
         this.bookingService = bookingService;
     }
@@ -41,13 +40,13 @@ public class BookingController {
 
     @GetMapping
     public List<OutBookingDto> getAllBookingsFromUser(@RequestHeader(BOOKER_ID) long bookerId,
-                                                      @RequestParam (defaultValue = "ALL") String state) {
+                                                      @RequestParam(defaultValue = "ALL") String state) {
         return bookingService.getAllBookingsFromUser(bookerId, state);
     }
 
     @GetMapping("/owner")
     public List<OutBookingDto> getAllBookingsFromOwner(@RequestHeader(BOOKER_ID) long ownerId,
-                                                      @RequestParam (defaultValue = "ALL") String state) {
+                                                       @RequestParam(defaultValue = "ALL") String state) {
         return bookingService.getAllBookingsFromOwner(ownerId, state);
     }
 

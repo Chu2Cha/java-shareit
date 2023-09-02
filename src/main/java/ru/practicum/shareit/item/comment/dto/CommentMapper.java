@@ -11,7 +11,7 @@ public class CommentMapper {
 
     private final ItemMapper itemMapper;
 
-    public Comment toComment (CommentDto commentDto){
+    public Comment toComment(CommentDto commentDto) {
         return Comment.builder()
                 .id(commentDto.getId())
                 .text(commentDto.getText())
@@ -19,7 +19,7 @@ public class CommentMapper {
                 .build();
     }
 
-    public CommentDto toCommentDto (Comment comment){
+    public CommentDto toCommentDto(Comment comment) {
         return CommentDto.builder()
                 .id(comment.getId())
                 .text(comment.getText())

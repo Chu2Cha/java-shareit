@@ -25,7 +25,7 @@ public class BookingMapper {
                 .build();
     }
 
-    public ItemBookingDto toItemBookingDto(Booking booking){
+    public ItemBookingDto toItemBookingDto(Booking booking) {
         return ItemBookingDto.builder()
                 .id(booking.getId())
                 .start(booking.getStart())

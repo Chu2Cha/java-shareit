@@ -60,7 +60,7 @@ public class BookingServiceImpl implements BookingService {
                     .booker(booker)
                     .status(BookingStatus.WAITING)
                     .build();
-            if(booking.getItem().getOwnerId()==bookerId){
+            if (booking.getItem().getOwnerId() == bookerId) {
                 throw new NotFoundException("Владелец не может бронировать собственную вещь!");
             }
             bookingRepository.save(booking);
@@ -77,7 +77,7 @@ public class BookingServiceImpl implements BookingService {
         if (booking.getItem().getOwnerId() != bookerId) {
             throw new NotFoundException("Только тот, кто бронирует, может менять статус.");
         }
-        if(booking.getStatus()!=BookingStatus.WAITING){
+        if (booking.getStatus() != BookingStatus.WAITING) {
             throw new BadRequestException("Статус букинга не WAITING.");
         }
         if (approved) {
@@ -98,8 +98,8 @@ public class BookingServiceImpl implements BookingService {
     @Override
     @Transactional
     public OutBookingDto findById(long bookingId, long bookerId) {
-        Booking booking = bookingRepository.findById(bookingId).
-                orElseThrow(() -> new NotFoundException("Бронирование не найдено."));
+        Booking booking = bookingRepository.findById(bookingId)
+                .orElseThrow(() -> new NotFoundException("Бронирование не найдено."));
         if (booking.getBooker().getId() == bookerId || booking.getItem().getOwnerId() == bookerId) {
             return bookingMapper.toOutBookingDto(booking);
         } else {
@@ -158,7 +158,7 @@ public class BookingServiceImpl implements BookingService {
         String query;
         switch (state) {
             case "ALL":
-                bookingList= bookingRepository
+                bookingList = bookingRepository
                         .findByItemOwnerIdOrderByEndDesc(ownerId);
                 break;
             case "CURRENT":

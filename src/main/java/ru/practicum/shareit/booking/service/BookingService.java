@@ -8,7 +8,8 @@ import java.util.List;
 public interface BookingService {
 
     OutBookingDto createBooking(InBookingDto inBookingDto, long bookerId);
-    OutBookingDto approve (long bookingId, long bookerId, Boolean approved);
+
+    OutBookingDto approve(long bookingId, long bookerId, Boolean approved);
 
     OutBookingDto deleteBooking(long bookingId, long bookerId);
 

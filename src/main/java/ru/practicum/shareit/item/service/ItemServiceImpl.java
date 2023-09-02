@@ -118,18 +118,18 @@ public class ItemServiceImpl implements ItemService {
 
     @Override
     public CommentDto addComment(long itemId, long userId, CommentDto commentDto) {
-        if(commentDto.getText().isEmpty() || commentDto.getText() == null){
+        if (commentDto.getText().isEmpty() || commentDto.getText() == null) {
             throw new BadRequestException("Ошибка: пустой комментарий!");
         }
         Item item = itemMapper.toItem(findById(itemId, userId));
         User author = userMapper.toUser(userService.findUserById(userId));
         LocalDateTime now = LocalDateTime.now();
-        List<Booking> bookingsApproved = bookingRepository.
-                findAllByItemIdAndBookerIdAndStatusIsAndStartIsBeforeOrderByStart
-                        (itemId, userId, BookingStatus.APPROVED, now);
-        List<Booking> bookingsPast = bookingRepository.
-                findAllByItemIdAndBookerIdAndStatusIsAndStartIsBeforeOrderByStart
-                        (itemId, userId, BookingStatus.CANCELED, now);
+        List<Booking> bookingsApproved = bookingRepository
+                .findAllByItemIdAndBookerIdAndStatusIsAndStartIsBeforeOrderByStart(itemId,
+                        userId, BookingStatus.APPROVED, now);
+        List<Booking> bookingsPast = bookingRepository
+                .findAllByItemIdAndBookerIdAndStatusIsAndStartIsBeforeOrderByStart(itemId,
+                        userId, BookingStatus.CANCELED, now);
         List<Booking> bookings = Stream.concat(bookingsApproved.stream(), bookingsPast.stream())
                 .collect(Collectors.toList());
         if (!bookings.isEmpty()) {
@@ -139,7 +139,6 @@ public class ItemServiceImpl implements ItemService {
             comment.setCreated(now);
             return commentMapper.toCommentDto(commentRepository.save(comment));
         } else throw new BadRequestException(String.format("Не найден пользователь %d с предметом %d", userId, itemId));
-
     }
 
     private boolean checkEmptyMessage(String message) {
