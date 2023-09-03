@@ -1,7 +1,6 @@
 package ru.practicum.shareit.user.service;
 
 import org.springframework.stereotype.Service;
-import ru.practicum.shareit.exceptions.ConflictException;
 import ru.practicum.shareit.exceptions.NotFoundException;
 import ru.practicum.shareit.user.dto.UserDto;
 import ru.practicum.shareit.user.dto.UserMapper;
@@ -24,54 +23,38 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public List<UserDto> getAllUsers() {
-        return userRepository.getAllUsers().stream()
+        return userRepository.findAll().stream()
                 .map(userMapper::toUserDto)
                 .collect(Collectors.toList());
     }
 
     @Override
     public UserDto saveUser(UserDto userDto) {
-        checkEmailInStorage(userDto);
-        return userMapper.toUserDto(userRepository.saveUser(userMapper.toUser(userDto)));
+        return userMapper.toUserDto(userRepository.save(userMapper.toUser(userDto)));
     }
 
     @Override
-    public void removeUser(int id) {
+    public void removeUser(long id) {
         findUserById(id);
-        userRepository.removeUser(id);
+        userRepository.deleteById(id);
     }
 
     @Override
-    public UserDto updateUser(UserDto userDto, int id) {
-        User userFromStorage = findUserById(id);
-        userDto.setId(id);
-        if (userDto.getName() == null) {
-            checkEmailInStorage(userDto);
-            userDto.setName(userFromStorage.getName());
+    public UserDto updateUser(UserDto userDto, long id) {
+        User user = userMapper.toUser(findUserById(id));
+        if (userDto.getName() != null) {
+            user.setName(userDto.getName());
         }
-        if (userDto.getEmail() == null) {
-            userDto.setEmail(userFromStorage.getEmail());
+        if (userDto.getEmail() != null) {
+            user.setEmail(userDto.getEmail());
         }
-        User user = userMapper.toUser(userDto);
-        userRepository.updateUser(user);
-        return userMapper.toUserDto(userRepository.updateUser(userMapper.toUser(userDto)));
+        return userMapper.toUserDto(userRepository.save(user));
     }
 
     @Override
-    public UserDto getUser(int id) {
-        User user = findUserById(id);
-        return userMapper.toUserDto(user);
+    public UserDto findUserById(long id) {
+        return userMapper.toUserDto(userRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("Пользователь с id " + id + " не найден.")));
     }
 
-
-    private User findUserById(int id) {
-        return Optional.ofNullable(userRepository.getUser(id))
-                .orElseThrow(() -> new NotFoundException("Пользователь с id " + id + " не найден."));
-    }
-
-    private void checkEmailInStorage(UserDto userDto) {
-        if (userRepository.checkEmail(userDto.getId(), userDto.getEmail())) {
-            throw new ConflictException("Электронная почта уже занята!");
-        }
-    }
 }

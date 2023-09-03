@@ -31,17 +31,17 @@ public class UserController {
     }
 
     @DeleteMapping("/{id}")
-    public void delete(@PathVariable("id") int id) {
+    public void delete(@PathVariable("id") long id) {
         userService.removeUser(id);
     }
 
     @PatchMapping("/{id}")
-    public UserDto update(@RequestBody UserDto userDto, @PathVariable int id) {
+    public UserDto update(@RequestBody UserDto userDto, @PathVariable long id) {
         return userService.updateUser(userDto, id);
     }
 
     @GetMapping("/{id}")
-    public UserDto getUser(@PathVariable("id") int id) {
-        return userService.getUser(id);
+    public UserDto getUser(@PathVariable("id") long id) {
+        return userService.findUserById(id);
     }
 }

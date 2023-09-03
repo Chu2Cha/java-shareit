@@ -2,8 +2,10 @@ package ru.practicum.shareit.item;
 
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import ru.practicum.shareit.item.comment.dto.CommentDto;
 import ru.practicum.shareit.item.dto.ItemDto;
 import ru.practicum.shareit.item.service.ItemService;
+
 import javax.validation.Valid;
 import java.util.List;
 
@@ -20,35 +22,43 @@ public class ItemController {
     }
 
     @PostMapping
-    public ItemDto createItem(@Valid @RequestBody ItemDto itemDto, @RequestHeader(OWNER_ID) int ownerId) {
+    public ItemDto createItem(@Valid @RequestBody ItemDto itemDto, @RequestHeader(OWNER_ID) long ownerId) {
         return itemService.createItem(itemDto, ownerId);
     }
 
     @DeleteMapping("/{id}")
-    public void delete(@PathVariable("id") int id, @RequestHeader(OWNER_ID) int ownerId) {
+    public void delete(@PathVariable("id") long id, @RequestHeader(OWNER_ID) long ownerId) {
         itemService.deleteItem(id, ownerId);
     }
 
     @GetMapping("/{id}")
-    public ItemDto getItem(@PathVariable("id") int id, @RequestHeader(OWNER_ID) int ownerId) {
-        return itemService.getItem(id, ownerId);
+    public ItemDto getItem(@PathVariable("id") long id, @RequestHeader(OWNER_ID) long ownerId) {
+        return itemService.findById(id, ownerId);
     }
 
     @GetMapping
-    public List<ItemDto> getAllItemsFromUser(@RequestHeader(OWNER_ID) int ownerId) {
+    public List<ItemDto> getAllItemsFromUser(@RequestHeader(OWNER_ID) long ownerId) {
         return itemService.getAllItemsFromUser(ownerId);
     }
 
     @PatchMapping("/{id}")
     public ItemDto update(@RequestBody ItemDto itemDto,
-                          @PathVariable("id") int id,
-                          @RequestHeader(OWNER_ID) int ownerId) {
+                          @PathVariable("id") long id,
+                          @RequestHeader(OWNER_ID) long ownerId) {
         return itemService.updateItem(itemDto, id, ownerId);
     }
 
     @GetMapping("/search")
-    public List<ItemDto> searchItem(@RequestParam("text") String message, @RequestHeader(OWNER_ID) int ownerId) {
+    public List<ItemDto> searchItem(@RequestParam("text") String message, @RequestHeader(OWNER_ID) long ownerId) {
         return itemService.searchItems(message, ownerId);
+    }
+
+    @PostMapping("/{itemId}/comment")
+    public CommentDto createComment(@PathVariable("itemId") long itemId,
+                                    @RequestHeader(OWNER_ID) long userId,
+                                    @Valid @RequestBody CommentDto commentDto) {
+        return itemService.addComment(itemId, userId, commentDto);
+
     }
 
 }
