@@ -13,10 +13,6 @@ import java.util.List;
 @Repository
 public interface BookingRepository extends JpaRepository<Booking, Long> {
 
-    String COMMON_QUERY = "SELECT b FROM Booking b "
-            + "INNER JOIN Item i ON b.item.id = i.id "
-            + "WHERE i.ownerId = :ownerId ";
-
     @Modifying
     @Query("UPDATE Booking b "
             + "SET b.status = :status  "

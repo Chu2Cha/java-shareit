@@ -3,13 +3,10 @@ package ru.practicum.shareit.item.comment.dto;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Component;
 import ru.practicum.shareit.item.comment.model.Comment;
-import ru.practicum.shareit.item.dto.ItemMapper;
 
 @Component
 @AllArgsConstructor
 public class CommentMapper {
-
-    private final ItemMapper itemMapper;
 
     public Comment toComment(CommentDto commentDto) {
         return Comment.builder()

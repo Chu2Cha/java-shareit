@@ -28,13 +28,8 @@ public class BookingController {
         return bookingService.createBooking(inBookingDto, ownerId);
     }
 
-    @DeleteMapping("/{id}")
-    public void delete(@PathVariable("id") long id, @RequestHeader(BOOKER_ID) long bookerId) {
-        bookingService.deleteBooking(id, bookerId);
-    }
-
     @GetMapping("/{id}")
-    public OutBookingDto getItem(@PathVariable("id") long id, @RequestHeader(BOOKER_ID) long bookerId) {
+    public OutBookingDto getBooking(@PathVariable("id") long id, @RequestHeader(BOOKER_ID) long bookerId) {
         return bookingService.findById(id, bookerId);
     }
 

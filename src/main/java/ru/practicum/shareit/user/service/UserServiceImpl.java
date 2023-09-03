@@ -33,7 +33,6 @@ public class UserServiceImpl implements UserService {
         return userMapper.toUserDto(userRepository.save(userMapper.toUser(userDto)));
     }
 
-
     @Override
     public void removeUser(long id) {
         findUserById(id);
@@ -51,7 +50,6 @@ public class UserServiceImpl implements UserService {
         }
         return userMapper.toUserDto(userRepository.save(user));
     }
-
 
     @Override
     public UserDto findUserById(long id) {

@@ -13,9 +13,10 @@ import ru.practicum.shareit.exceptions.BadRequestException;
 import ru.practicum.shareit.exceptions.NotFoundException;
 import ru.practicum.shareit.item.dto.ItemMapper;
 import ru.practicum.shareit.item.model.Item;
-import ru.practicum.shareit.item.service.ItemService;
+import ru.practicum.shareit.item.repository.ItemRepository;
 import ru.practicum.shareit.user.dto.UserMapper;
 import ru.practicum.shareit.user.model.User;
+import ru.practicum.shareit.user.repository.UserRepository;
 import ru.practicum.shareit.user.service.UserService;
 
 import java.time.LocalDateTime;
@@ -27,47 +28,36 @@ import java.util.stream.Collectors;
 public class BookingServiceImpl implements BookingService {
 
     private final UserService userService;
-
     private final BookingRepository bookingRepository;
     private final BookingMapper bookingMapper;
     private final UserMapper userMapper;
-    private final ItemService itemService;
     private final ItemMapper itemMapper;
+    private final UserRepository userRepository;
+    private final ItemRepository itemRepository;
 
     @Override
     @Transactional
     public OutBookingDto createBooking(InBookingDto inBookingDto, long bookerId) {
         userService.findUserById(bookerId);
-        User booker = userMapper.toUser(userService.findUserById(bookerId));
+        User booker = userRepository.findById(bookerId).orElseThrow(
+                () -> new NotFoundException("Пользователь с id " + bookerId + " не найден."));
         if (inBookingDto.getEnd().isBefore(inBookingDto.getStart())) {
             throw new BadRequestException("Дата окончания бронирования раньше начала бронирования!");
-        }
-        if (inBookingDto.getEnd().isBefore(LocalDateTime.now())) {
-            throw new BadRequestException("Дата окончания бронирования раньше текущего момента!");
         }
         if (inBookingDto.getEnd().isEqual(inBookingDto.getStart())) {
             throw new BadRequestException("Время начала и окончания бронировая совпадают!");
         }
-        if (inBookingDto.getStart().isBefore(LocalDateTime.now())) {
-            throw new BadRequestException("Дата начала бронирования раньше текущего момента!");
+        Item item = itemRepository.findById(inBookingDto.getItemId()).orElseThrow(
+                () -> new NotFoundException("Предмет с id " + inBookingDto.getItemId() + " не найден."));
+        if (item.getOwnerId() == bookerId) {
+            throw new NotFoundException("Владелец не может бронировать собственную вещь!");
         }
-        Item item = itemMapper.toItem(itemService.findById(inBookingDto.getItemId(), bookerId));
         if (item.getAvailable()) {
-            Booking booking = Booking.builder()
-                    .start(inBookingDto.getStart())
-                    .end(inBookingDto.getEnd())
-                    .item(item)
-                    .booker(booker)
-                    .status(BookingStatus.WAITING)
-                    .build();
-            if (booking.getItem().getOwnerId() == bookerId) {
-                throw new NotFoundException("Владелец не может бронировать собственную вещь!");
-            }
+            Booking booking = bookingMapper.toBooking(inBookingDto, item, booker);
             bookingRepository.save(booking);
-            return bookingMapper.toOutBookingDto(booking);
+            return buildOutBookingDto(booking);
         } else
             throw new BadRequestException("Предмет не доступен к бронированию.");
-
     }
 
     @Override
@@ -91,17 +81,11 @@ public class BookingServiceImpl implements BookingService {
 
     @Override
     @Transactional
-    public OutBookingDto deleteBooking(long bookingId, long bookerId) {
-        return null;
-    }
-
-    @Override
-    @Transactional
     public OutBookingDto findById(long bookingId, long bookerId) {
         Booking booking = bookingRepository.findById(bookingId)
                 .orElseThrow(() -> new NotFoundException("Бронирование не найдено."));
         if (booking.getBooker().getId() == bookerId || booking.getItem().getOwnerId() == bookerId) {
-            return bookingMapper.toOutBookingDto(booking);
+            return buildOutBookingDto(booking);
         } else {
             throw new NotFoundException("Только владелец или букинер может смотреть бронирования!");
         }
@@ -144,7 +128,7 @@ public class BookingServiceImpl implements BookingService {
 
         }
         return bookingList.stream()
-                .map(bookingMapper::toOutBookingDto)
+                .map(this::buildOutBookingDto)
                 .collect(Collectors.toList());
 
 
@@ -155,7 +139,6 @@ public class BookingServiceImpl implements BookingService {
         userService.findUserById(ownerId);
         LocalDateTime now = LocalDateTime.now();
         List<Booking> bookingList;
-        String query;
         switch (state) {
             case "ALL":
                 bookingList = bookingRepository
@@ -186,7 +169,14 @@ public class BookingServiceImpl implements BookingService {
 
         }
         return bookingList.stream()
-                .map(bookingMapper::toOutBookingDto)
+                .map(this::buildOutBookingDto)
                 .collect(Collectors.toList());
+    }
+
+    private OutBookingDto buildOutBookingDto(Booking booking) {
+        OutBookingDto outBookingDto = bookingMapper.toOutBookingDto(booking);
+        outBookingDto.setBooker(userMapper.toUserDto(booking.getBooker()));
+        outBookingDto.setItem(itemMapper.toItemDto(booking.getItem()));
+        return outBookingDto;
     }
 }

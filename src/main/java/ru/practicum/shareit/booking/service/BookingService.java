@@ -11,8 +11,6 @@ public interface BookingService {
 
     OutBookingDto approve(long bookingId, long bookerId, Boolean approved);
 
-    OutBookingDto deleteBooking(long bookingId, long bookerId);
-
     OutBookingDto findById(long bookingId, long bookerId);
 
     List<OutBookingDto> getAllBookingsFromUser(long bookerId, String state);
