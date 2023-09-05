@@ -6,6 +6,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import ru.practicum.shareit.exceptions.NotFoundException;
+import ru.practicum.shareit.item.dto.ItemDto;
+import ru.practicum.shareit.item.dto.ItemMapper;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.item.repository.ItemRepository;
 import ru.practicum.shareit.request.dto.ItemRequestDto;
@@ -19,6 +21,7 @@ import ru.practicum.shareit.user.service.UserService;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @AllArgsConstructor
@@ -29,6 +32,7 @@ public class RequestServiceImpl implements RequestService{
     private final UserRepository userRepository;
     private final RequestRepository requestRepository;
     private final ItemRepository itemRepository;
+    private final ItemMapper itemMapper;
     @Override
     public ItemRequestDto create(ItemRequestDto requestDto, long requestorId){
         userService.findUserById(requestorId);
@@ -41,12 +45,17 @@ public class RequestServiceImpl implements RequestService{
     }
 
     @Override
-    public ItemRequestDto findById(long id) {
+    public ItemRequestDto findById(long id, long userId) {
+        userService.findUserById(userId);
         ItemRequest itemRequest = requestRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Запрос не найден."));
-        itemRequest.setItems(itemRepository.findAllByRequestId(itemRequest.getId()));
+        long requestId = itemRequest.getId();
         ItemRequestDto itemRequestDto = requestMapper.toRequestDto(itemRequest);
-//        itemRequestDto.setRequestor(userService.findUserById(id));
+        itemRequestDto.setRequestor(userService.findUserById(itemRequest.getRequestor().getId()));
+        List<ItemDto> itemDtoList = itemRepository.findByRequestId(requestId).stream()
+                .map(itemMapper::toItemDto)
+                .collect(Collectors.toList());
+        itemRequestDto.setItems(itemDtoList);
         return itemRequestDto;
     }
 
@@ -62,8 +71,7 @@ public class RequestServiceImpl implements RequestService{
     private List<ItemRequestDto> getItemRequestDtos(List<ItemRequest> itemRequestList) {
         List<ItemRequestDto> itemRequestDtoList = new ArrayList<>();
         for(ItemRequest itemRequest : itemRequestList){
-            itemRequest.setItems(itemRepository.findAllByRequestId(itemRequest.getId()));
-            ItemRequestDto itemRequestDto = requestMapper.toRequestDto(itemRequest);
+            ItemRequestDto itemRequestDto = findById(itemRequest.getId(), itemRequest.getRequestor().getId());
             itemRequestDtoList.add(itemRequestDto);
         }
         return itemRequestDtoList;
