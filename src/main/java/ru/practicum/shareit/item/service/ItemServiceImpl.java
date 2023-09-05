@@ -16,6 +16,8 @@ import ru.practicum.shareit.item.dto.ItemDto;
 import ru.practicum.shareit.item.dto.ItemMapper;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.item.repository.ItemRepository;
+import ru.practicum.shareit.request.dto.RequestMapper;
+import ru.practicum.shareit.request.service.RequestService;
 import ru.practicum.shareit.user.dto.UserMapper;
 import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.service.UserService;
@@ -36,6 +38,8 @@ public class ItemServiceImpl implements ItemService {
     private final CommentMapper commentMapper;
     private final CommentRepository commentRepository;
     private final UserMapper userMapper;
+    private final RequestMapper requestMapper;
+    private final RequestService requestService;
 
 
     @Override
@@ -53,10 +57,11 @@ public class ItemServiceImpl implements ItemService {
 
     @Override
     public ItemDto createItem(ItemDto itemDto, long ownerId) {
-        userService.findUserById(ownerId);
+        User owner = userMapper.toUser(userService.findUserById(ownerId));
         Item item = itemMapper.toItem(itemDto);
         item.setOwnerId(ownerId);
-        item.setRequest(null);
+        item.setRequest(itemDto.getRequestId() != null ?
+                requestMapper.toRequest(requestService.findById(itemDto.getRequestId()), owner) : null);
         return itemMapper.toItemDto(itemRepository.save(item));
     }
 
@@ -140,6 +145,7 @@ public class ItemServiceImpl implements ItemService {
             return commentMapper.toCommentDto(commentRepository.save(comment));
         } else throw new BadRequestException(String.format("Не найден пользователь %d с предметом %d", userId, itemId));
     }
+
 
     private boolean checkEmptyMessage(String message) {
         return message == null || message.trim().isEmpty();
