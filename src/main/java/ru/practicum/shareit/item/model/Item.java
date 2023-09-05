@@ -33,7 +33,7 @@ public class Item {
     private Long ownerId;
 
     @ManyToOne
-    @JoinColumn(name = "requester_id")
+    @JoinColumn(name = "request_id")
     private ItemRequest request;
 
     @Transient
