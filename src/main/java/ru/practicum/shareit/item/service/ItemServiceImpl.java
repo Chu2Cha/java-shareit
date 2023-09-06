@@ -1,6 +1,8 @@
 package ru.practicum.shareit.item.service;
 
 import lombok.AllArgsConstructor;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import ru.practicum.shareit.booking.dto.BookingMapper;
 import ru.practicum.shareit.booking.model.Booking;
@@ -43,9 +45,9 @@ public class ItemServiceImpl implements ItemService {
 
 
     @Override
-    public List<ItemDto> getAllItemsFromUser(long ownerId) {
-
-        List<ItemDto> itemDtoList = itemRepository.findAllByOwnerIdOrderByIdAsc(ownerId).stream()
+    public List<ItemDto> getAllItemsFromUser(long ownerId, int from, int size) {
+        Pageable page = PageRequest.of(from / size, size);
+        List<ItemDto> itemDtoList = itemRepository.findAllByOwnerIdOrderByIdAsc(ownerId, page).stream()
                 .map(itemMapper::toItemDto)
                 .collect(Collectors.toList());
         for (ItemDto itemDto : itemDtoList) {
@@ -108,22 +110,20 @@ public class ItemServiceImpl implements ItemService {
     }
 
     @Override
-    public List<ItemDto> searchItems(String message, long ownerId) {
+    public List<ItemDto> searchItems(String message, long ownerId, int from, int size) {
         userService.findUserById(ownerId);
+        Pageable page = PageRequest.of(from / size, size);
         if (checkEmptyMessage(message)) {
             return Collections.emptyList();
         }
-        return itemRepository.findAll().stream()
-                .filter(item -> item.getAvailable() &&
-                        (item.getName().toLowerCase().contains(message.toLowerCase()) ||
-                                item.getDescription().toLowerCase().contains(message.toLowerCase())))
+        return itemRepository.searchItems(message, page).stream()
                 .map(itemMapper::toItemDto)
                 .collect(Collectors.toList());
     }
 
     @Override
     public CommentDto addComment(long itemId, long userId, CommentDto commentDto) {
-        if (commentDto.getText().isEmpty() || commentDto.getText() == null) {
+        if (commentDto.getText().isEmpty()) {
             throw new BadRequestException("Ошибка: пустой комментарий!");
         }
         Item item = itemMapper.toItem(findById(itemId, userId));
