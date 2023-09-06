@@ -53,8 +53,8 @@ public class ItemController {
 
     @GetMapping("/search")
     public List<ItemDto> searchItem(@RequestParam("text") String message,
-                                    @RequestHeader(OWNER_ID) long ownerId, @PositiveOrZero
-                                    @RequestParam(defaultValue = "0") int from,
+                                    @RequestHeader(OWNER_ID) long ownerId,
+                                    @PositiveOrZero @RequestParam(defaultValue = "0") int from,
                                     @PositiveOrZero @RequestParam(defaultValue = "10") int size) {
         return itemService.searchItems(message, ownerId, from, size);
     }

@@ -24,7 +24,7 @@ import java.util.stream.Collectors;
 
 @Service
 @AllArgsConstructor
-public class RequestServiceImpl implements RequestService{
+public class RequestServiceImpl implements RequestService {
 
     private final UserService userService;
     private final RequestMapper requestMapper;
@@ -32,8 +32,9 @@ public class RequestServiceImpl implements RequestService{
     private final RequestRepository requestRepository;
     private final ItemRepository itemRepository;
     private final ItemMapper itemMapper;
+
     @Override
-    public ItemRequestDto create(ItemRequestDto requestDto, long requestorId){
+    public ItemRequestDto create(ItemRequestDto requestDto, long requestorId) {
         userService.findUserById(requestorId);
         User requestor = userRepository.findById(requestorId).orElseThrow(
                 () -> new NotFoundException("Пользователь с id " + requestorId + " не найден."));
@@ -59,7 +60,6 @@ public class RequestServiceImpl implements RequestService{
     }
 
 
-
     @Override
     public List<ItemRequestDto> findAllFromUser(long requestorId) {
         userService.findUserById(requestorId);
@@ -69,7 +69,7 @@ public class RequestServiceImpl implements RequestService{
 
     private List<ItemRequestDto> getItemRequestDtos(List<ItemRequest> itemRequestList) {
         List<ItemRequestDto> itemRequestDtoList = new ArrayList<>();
-        for(ItemRequest itemRequest : itemRequestList){
+        for (ItemRequest itemRequest : itemRequestList) {
             ItemRequestDto itemRequestDto = findById(itemRequest.getId(), itemRequest.getRequestor().getId());
             itemRequestDtoList.add(itemRequestDto);
         }

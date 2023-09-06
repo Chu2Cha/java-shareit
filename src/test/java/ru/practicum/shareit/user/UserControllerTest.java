@@ -54,6 +54,7 @@ public class UserControllerTest {
                 .andExpect(jsonPath("$.name", is(userDto.getName())))
                 .andExpect(jsonPath("$.email", is(userDto.getEmail())));
     }
+
     @Test
     void saveNewUserWithException() throws Exception {
         when((userService.saveUser(any())))
