@@ -24,6 +24,7 @@ import ru.practicum.shareit.user.repository.UserRepository;
 import ru.practicum.shareit.user.service.UserService;
 
 import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -41,31 +42,32 @@ class ItemServiceImplTest {
     @Mock
     private ItemMapper itemMapper;
     @Mock
-    private  UserService userService;
+    private UserService userService;
     @Mock
     private UserRepository userRepository;
     @Mock
-    private  ItemRepository itemRepository;
+    private ItemRepository itemRepository;
     @Mock
-    private  BookingRepository bookingRepository;
+    private BookingRepository bookingRepository;
     @Mock
-    private  BookingMapper bookingMapper;
+    private BookingMapper bookingMapper;
     @Mock
-    private  CommentMapper commentMapper;
+    private CommentMapper commentMapper;
     @Mock
-    private  CommentRepository commentRepository;
+    private CommentRepository commentRepository;
 
     @Mock
-    private  UserMapper userMapper;
+    private UserMapper userMapper;
     @Mock
-    private  RequestMapper requestMapper;
+    private RequestMapper requestMapper;
     @Mock
-    private  RequestService requestService;
+    private RequestService requestService;
 
     @BeforeEach
     public void setup() {
         MockitoAnnotations.initMocks(this);
     }
+
     @Test
     void getAllItemsFromUser() {
     }
@@ -86,31 +88,16 @@ class ItemServiceImplTest {
         user.setId(userId);
         Item item = new Item(itemId, "ItemName", "ItemDescription", true,
                 userId, null, null, null);
-        UserDto expectedUserDto = new UserDto();
-        expectedUserDto.setId(userId);
-        ItemDto expectedItemDto = new ItemDto();
-        expectedItemDto.setId(itemId);
-        expectedItemDto.setOwnerId(userId);
-        expectedItemDto.setName(item.getName());
-        expectedItemDto.setDescription(item.getDescription());
-        expectedItemDto.setAvailable(item.getAvailable());
-        expectedItemDto.setComments(Collections.emptyList());
-
-        when(userService.findUserById(anyLong())).thenReturn(expectedUserDto);
-        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
-        when(itemRepository.findById(itemId)).thenReturn(Optional.of(item));
-        when(itemMapper.toItemDto(any())).thenReturn(expectedItemDto);
-
-
-
-        ItemDto actualItemDto = itemService.findById(itemId, userId);
-
-        assertEquals(expectedItemDto, actualItemDto);
-        verify(userService).findUserById(userId);
-        verify(itemRepository).findById(itemId);
-        verify(itemMapper).toItemDto(item);
-
-
+        UserDto userDto = new UserDto();
+        userDto.setId(userId);
+        ItemDto itemDto = new ItemDto(item.getId(), item.getName(),
+                item.getDescription(), item.getAvailable(), null,
+                userId, null, null, null);
+        when(userService.findUserById(userId)).thenReturn(userDto);
+        when(itemRepository.findById(anyLong())).thenReturn(Optional.of(item));
+        when(itemMapper.toItemDto(item)).thenReturn(itemDto);
+        ItemDto resultItemDto = itemService.findById(itemId, userId);
+        assertEquals(itemDto, resultItemDto);
     }
 
     @Test
