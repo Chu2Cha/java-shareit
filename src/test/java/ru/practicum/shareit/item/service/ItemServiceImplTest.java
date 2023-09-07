@@ -7,6 +7,10 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.shareit.booking.dto.BookingMapper;
 import ru.practicum.shareit.booking.repository.BookingRepository;
 import ru.practicum.shareit.item.comment.dto.CommentMapper;
@@ -23,6 +27,7 @@ import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.repository.UserRepository;
 import ru.practicum.shareit.user.service.UserService;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -33,20 +38,22 @@ import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+@SpringBootTest
+@Transactional
 @ExtendWith(MockitoExtension.class)
 class ItemServiceImplTest {
 
-    @InjectMocks
+    @Autowired
     private ItemServiceImpl itemService;
-
     @Mock
     private ItemMapper itemMapper;
     @Mock
     private UserService userService;
     @Mock
-    private UserRepository userRepository;
-    @Mock
     private ItemRepository itemRepository;
+    @Mock
+    private UserRepository userRepository;
+
     @Mock
     private BookingRepository bookingRepository;
     @Mock
@@ -92,9 +99,10 @@ class ItemServiceImplTest {
         userDto.setId(userId);
         ItemDto itemDto = new ItemDto(item.getId(), item.getName(),
                 item.getDescription(), item.getAvailable(), null,
-                userId, null, null, null);
+                userId, null, null, Collections.emptyList());
+        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
         when(userService.findUserById(userId)).thenReturn(userDto);
-        when(itemRepository.findById(anyLong())).thenReturn(Optional.of(item));
+        when(itemRepository.findById(itemId)).thenReturn(Optional.of(item));
         when(itemMapper.toItemDto(item)).thenReturn(itemDto);
         ItemDto resultItemDto = itemService.findById(itemId, userId);
         assertEquals(itemDto, resultItemDto);
