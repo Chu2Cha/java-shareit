@@ -9,7 +9,6 @@ import org.mockito.MockitoAnnotations;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.shareit.booking.dto.BookingMapper;
 import ru.practicum.shareit.booking.repository.BookingRepository;
@@ -27,23 +26,18 @@ import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.repository.UserRepository;
 import ru.practicum.shareit.user.service.UserService;
 
-import java.util.ArrayList;
 import java.util.Collections;
-import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyLong;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
-@SpringBootTest
-@Transactional
+import static org.mockito.Mockito.*;
+
+
 @ExtendWith(MockitoExtension.class)
 class ItemServiceImplTest {
 
-    @Autowired
+    @InjectMocks
     private ItemServiceImpl itemService;
     @Mock
     private ItemMapper itemMapper;
@@ -70,10 +64,10 @@ class ItemServiceImplTest {
     @Mock
     private RequestService requestService;
 
-    @BeforeEach
-    public void setup() {
-        MockitoAnnotations.initMocks(this);
-    }
+//    @BeforeEach
+//    public void setup() {
+//        MockitoAnnotations.initMocks(this);
+//    }
 
     @Test
     void getAllItemsFromUser() {
@@ -91,19 +85,12 @@ class ItemServiceImplTest {
     void findById_whenUserFoundAndItemFound_thenReturnItemDto() {
         long itemId = 1L;
         long userId = 2L;
-        User user = new User();
-        user.setId(userId);
-        Item item = new Item(itemId, "ItemName", "ItemDescription", true,
-                userId, null, null, null);
-        UserDto userDto = new UserDto();
-        userDto.setId(userId);
-        ItemDto itemDto = new ItemDto(item.getId(), item.getName(),
-                item.getDescription(), item.getAvailable(), null,
-                userId, null, null, Collections.emptyList());
-        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
+        User user = new User(userId, "name", "email@mail.ru");
+        UserDto userDto = new UserDto(user.getId(), user.getName(), user.getEmail());
+        Item item = new Item(itemId, "ItemName", "ItemDescription", true, userId, null, null, null);
+        ItemDto itemDto = new ItemDto(item.getId(), item.getName(), item.getDescription(), item.getAvailable(), null, userId, null, null, Collections.emptyList());
         when(userService.findUserById(userId)).thenReturn(userDto);
         when(itemRepository.findById(itemId)).thenReturn(Optional.of(item));
-        when(itemMapper.toItemDto(item)).thenReturn(itemDto);
         ItemDto resultItemDto = itemService.findById(itemId, userId);
         assertEquals(itemDto, resultItemDto);
     }

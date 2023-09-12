@@ -20,6 +20,7 @@ import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.item.repository.ItemRepository;
 import ru.practicum.shareit.request.dto.RequestMapper;
 import ru.practicum.shareit.request.service.RequestService;
+import ru.practicum.shareit.user.dto.UserDto;
 import ru.practicum.shareit.user.dto.UserMapper;
 import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.service.UserService;
@@ -87,10 +88,10 @@ public class ItemServiceImpl implements ItemService {
 
     @Override
     public ItemDto findById(long id, long userId) {
-        userService.findUserById(userId);  // выбрасывает ошибку, если неавторизованный пользователь зайдет.
+       UserDto userDto = userService.findUserById(userId);  // выбрасывает ошибку, если неавторизованный пользователь зайдет.
         ItemDto itemDto = itemMapper.toItemDto(itemRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Предмет с id " + id + " не найден.")));
-        if (itemDto.getOwnerId() == userId) {
+        if (itemDto.getOwnerId() == userDto.getId()) {
             updateBookings(itemDto);
         }
         makeCommentDtoList(itemDto);

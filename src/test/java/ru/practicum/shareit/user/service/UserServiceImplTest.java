@@ -1,6 +1,5 @@
 package ru.practicum.shareit.user.service;
 
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -41,7 +40,7 @@ class UserServiceImplTest {
     User user;
 
     @BeforeEach
-    void BeforeEach() {
+    void beforeEach() {
         user = new User(1, "Name", "email@mail.ru");
     }
 
