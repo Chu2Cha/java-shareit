@@ -6,15 +6,12 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.mockito.MockitoAnnotations;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.shareit.booking.dto.BookingMapper;
 import ru.practicum.shareit.booking.repository.BookingRepository;
+import ru.practicum.shareit.exceptions.BadRequestException;
 import ru.practicum.shareit.exceptions.NotFoundException;
 import ru.practicum.shareit.item.comment.dto.CommentDto;
 import ru.practicum.shareit.item.comment.dto.CommentMapper;
@@ -24,6 +21,7 @@ import ru.practicum.shareit.item.dto.ItemMapper;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.item.repository.ItemRepository;
 import ru.practicum.shareit.request.dto.RequestMapper;
+import ru.practicum.shareit.request.model.ItemRequest;
 import ru.practicum.shareit.request.service.RequestService;
 import ru.practicum.shareit.user.dto.UserDto;
 import ru.practicum.shareit.user.dto.UserMapper;
@@ -31,10 +29,8 @@ import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.repository.UserRepository;
 import ru.practicum.shareit.user.service.UserService;
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
+import java.time.LocalDateTime;
+import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -110,13 +106,28 @@ class ItemServiceImplTest {
     }
 
     @Test
-    void createItem() {
+    void createItem_whenRequestServiceFindIsNull() {
         when(userService.findUserById(userId)).thenReturn(userDto);
         when(itemRepository.save(item)).thenReturn(item);
         ItemDto actualItemDto = itemService.createItem(itemDto, userId);
         actualItemDto.setComments(Collections.emptyList());
         assertEquals(itemDto, actualItemDto);
         verify(itemRepository).save(item);
+    }
+
+    @Test
+    void createItem_whenRequestServiceFindIsNotNull() {
+        ItemRequest itemRequest = new ItemRequest(1L,
+                "description", user, LocalDateTime.now(),
+                Collections.emptyList());
+        item.setRequest(itemRequest);
+        itemDto.setRequestId(itemRequest.getId());
+        when(userService.findUserById(userId)).thenReturn(userDto);
+        when(itemRepository.save(any(Item.class))).thenReturn(item);
+        ItemDto actualItemDto = itemService.createItem(itemDto, userId);
+        actualItemDto.setComments(Collections.emptyList());
+        assertEquals(itemDto, actualItemDto);
+        verify(itemRepository).save(any(Item.class));
     }
 
     @Test
@@ -137,6 +148,26 @@ class ItemServiceImplTest {
         ItemDto updatedItemDto = itemService.updateItem(itemDtoForUpdate,
                 itemId, userId);
         assertEquals(newName, updatedItemDto.getName());
+        assertEquals(item.getName(), updatedItemDto.getName());
+    }
+
+    @Test
+    void updateItem_whenNoNameAndFalseAvailable_thenReturnItemDtoWithOldName() {
+        ItemDto itemDtoForUpdate = new ItemDto(itemId, null,
+                null, false, null,
+                null, null, null, Collections.emptyList());
+        when(userService.findUserById(userId)).thenReturn(userDto);
+        when(itemRepository.findById(itemId)).thenReturn(Optional.of(item));
+        when(itemRepository.save(any(Item.class)))
+                .thenAnswer(invocation -> {
+                    Item savedItem = invocation.getArgument(0);
+                    savedItem.setAvailable(false);
+                    item.setAvailable(false);
+                    return savedItem;
+                });
+        ItemDto updatedItemDto = itemService.updateItem(itemDtoForUpdate,
+                itemId, userId);
+        assertEquals(false, updatedItemDto.getAvailable());
         assertEquals(item.getName(), updatedItemDto.getName());
     }
 
@@ -163,14 +194,49 @@ class ItemServiceImplTest {
         itemService.deleteItem(itemId, userId);
         verify(itemRepository, Mockito.times(1))
                 .deleteById(itemId);
-
     }
 
     @Test
-    void searchItems() {
+    void searchItems_whenEmptyMessage_thenReturnEmptyList() {
+        when(userService.findUserById(userId)).thenReturn(userDto);
+        Pageable page = PageRequest.of(from / size, size);
+        List<ItemDto> emptyList = itemService.searchItems(" ", userId,
+                from, size);
+        assertEquals(emptyList.size(), 0);
     }
 
     @Test
-    void addComment() {
+    void searchItems_whenMessageNotEmptyAndFoundAnything() {
+        Pageable page = PageRequest.of(from / size, size);
+        String searchText = "name";
+        List<Item> itemList = new ArrayList<>();
+        itemList.add(item);
+        when(userService.findUserById(userId)).thenReturn(userDto);
+        when(itemRepository.searchItems(searchText, page))
+                .thenReturn(itemList);
+        List<ItemDto> emptyList = itemService.searchItems("name", userId,
+                from, size);
+        assertEquals(emptyList.size(), 1);
     }
+
+    @Test
+    void addComment_whenCommentIsEmpty_thenBadRequestException() {
+        CommentDto commentDto = new CommentDto(1L, "",
+                "user", LocalDateTime.now());
+        assertThrows(BadRequestException.class, () ->
+                itemService.addComment(itemId, userId, commentDto));
+    }
+
+//    @Test
+//    void addComment_whenNormalCommentAndBookingWasCanceled_thenReturnComment(){
+//        Comment comment = new Comment();
+//        CommentDto commentDto = new CommentDto(1L, "new comment",
+//                "user", LocalDateTime.now());
+//        when(userService.findUserById(userId)).thenReturn(userDto);
+//        when(itemRepository.findById(itemId)).thenReturn(Optional.of(item));
+//        when(bookingRepository.findAllByItemIdAndBookerIdAndStatusIsAndStartIsBeforeOrderByStart(itemId,
+//                userId, BookingStatus.CANCELED, LocalDateTime.now() )).thenReturn(comment);
+//    }
+
+
 }

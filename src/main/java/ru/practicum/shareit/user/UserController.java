@@ -36,7 +36,7 @@ public class UserController {
     }
 
     @PatchMapping("/{id}")
-    public UserDto update(@RequestBody UserDto userDto, @PathVariable long id) {
+    public UserDto update(@RequestBody @Valid UserDto userDto, @PathVariable long id) {
         return userService.updateUser(userDto, id);
     }
 
