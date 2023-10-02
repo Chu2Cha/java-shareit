@@ -23,7 +23,8 @@ public class ItemController {
     }
 
     @PostMapping
-    public ItemDto createItem(@Valid @RequestBody ItemDto itemDto, @RequestHeader(OWNER_ID) long ownerId) {
+    public ItemDto createItem(@Valid @RequestBody ItemDto itemDto,
+                              @RequestHeader(OWNER_ID) long ownerId) {
         return itemService.createItem(itemDto, ownerId);
     }
 

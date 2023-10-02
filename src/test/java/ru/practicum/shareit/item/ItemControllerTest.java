@@ -59,6 +59,7 @@ class ItemControllerTest {
                         .accept(MediaType.APPLICATION_JSON)
                         .header("X-Sharer-User-Id", 1))
                 .andExpect(status().isOk())
+                .andDo(result -> System.out.println("Response body: " + result.getResponse().getContentAsString()))
                 .andExpect(jsonPath("$.id", is(itemDto1.getId()), Long.class))
                 .andExpect(jsonPath("$.name", is(itemDto1.getName())))
                 .andExpect(jsonPath("$.description", is(itemDto1.getDescription())))
