@@ -56,8 +56,8 @@ class BookingControllerTest {
                 true, null, 1L, null, null, null);
 
         outBookingDto = new OutBookingDto(1L,
-                inBookingDto.getStart().plusHours(5),
-                inBookingDto.getEnd().plusHours(5),
+                inBookingDto.getStart(),
+                inBookingDto.getEnd(),
                 BookingStatus.WAITING,
                 itemDto,
                 userDto);
