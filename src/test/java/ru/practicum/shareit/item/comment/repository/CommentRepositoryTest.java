@@ -37,13 +37,13 @@ class CommentRepositoryTest {
         Comment comment1 = new Comment();
         comment1.setText("First comment text");
         comment1.setItem(item1);
-        comment1.setCreated(LocalDateTime.of(2023, 10,1,1,11));
+        comment1.setCreated(LocalDateTime.of(2023, 10, 1, 1, 11));
         commentRepository.save(comment1);
 
         Comment comment2 = new Comment();
         comment2.setText("Second comment text");
         comment2.setItem(item1);
-        comment2.setCreated(LocalDateTime.of(2023, 10,2, 2, 22));
+        comment2.setCreated(LocalDateTime.of(2023, 10, 2, 2, 22));
         commentRepository.save(comment2);
     }
 

@@ -19,10 +19,11 @@ import ru.practicum.shareit.user.dto.UserDto;
 
 import java.time.LocalDateTime;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyLong;
+import static org.hamcrest.Matchers.is;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(controllers = BookingController.class)
@@ -77,7 +78,15 @@ class BookingControllerTest {
     }
 
     @Test
-    void getBooking() {
+    void getBooking() throws Exception {
+        when(bookingService.findById(anyLong(), anyLong()))
+                .thenReturn(outBookingDto);
+        mvc.perform(get("/bookings/1")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .accept(MediaType.APPLICATION_JSON)
+                        .header(BOOKER_ID, 1))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id", is(outBookingDto.getId()), Long.class));
     }
 
     @Test

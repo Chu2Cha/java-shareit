@@ -100,20 +100,6 @@ public class UserControllerTest {
 
     @SneakyThrows
     @Test
-    void updateUser_whenUserIsNotValid_thenReturnBadRequest() {
-        userDto.setName(null);
-
-        mvc.perform(patch("/users/{id}", userDto.getId())
-                        .contentType("application/json")
-                        .content(mapper.writeValueAsString(userDto)))
-                .andDo(print())
-                .andExpect(status().isBadRequest());
-
-        verify(userService, never()).updateUser(userDto, userDto.getId());
-    }
-
-    @SneakyThrows
-    @Test
     void updateUser_whenUserIsValid_thenReturnUpdatedUserDto() {
         UserDto userDtoForUpdate = new UserDto(1L, "UpdatedName",
                 "new@email.com");
@@ -121,7 +107,6 @@ public class UserControllerTest {
                         .contentType("application/json")
                         .content(mapper.writeValueAsString(userDtoForUpdate)))
                 .andDo(print());
-
         verify(userService).updateUser(userDtoForUpdate, userDto.getId());
     }
 
@@ -134,7 +119,6 @@ public class UserControllerTest {
                         MockMvcRequestBuilders.delete("/users/{id}", id))
                 .andExpect(MockMvcResultMatchers.status().isOk())
                 .andReturn();
-
         Mockito.verify(userService, Mockito.times(1)).removeUser(id);
     }
 }

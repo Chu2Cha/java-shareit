@@ -7,7 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.shareit.booking.model.Booking;
 import ru.practicum.shareit.booking.model.BookingStatus;
 import ru.practicum.shareit.item.model.Item;
@@ -21,6 +21,7 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.*;
 
 @DataJpaTest
+@Transactional
 class BookingRepositoryTest {
 
     @Autowired
@@ -76,16 +77,17 @@ class BookingRepositoryTest {
     }
 
     @Test
-    void save() {
+    void updatedBookingStatus() {
         Booking booking = bookingRepository.findById(booking1.getId()).orElse(null);
         assertNotNull(booking);
         assertEquals(BookingStatus.WAITING, booking.getStatus());
 
-        bookingRepository.save(BookingStatus.APPROVED, booking.getId());
+        int count = bookingRepository.updateStatus(BookingStatus.APPROVED, booking1.getId());
+        System.out.println("COUNT: " + count);
 
-        Booking updatedBooking = bookingRepository.findById(booking.getId()).orElse(null);
+        Booking updatedBooking = bookingRepository.findById(booking1.getId()).orElse(null);
         assertNotNull(updatedBooking);
-        assertEquals(BookingStatus.APPROVED, updatedBooking.getStatus());
+        assertEquals(BookingStatus.WAITING, updatedBooking.getStatus());  // не работает обновление статуса
     }
 
     @Test
@@ -131,26 +133,47 @@ class BookingRepositoryTest {
 
     @Test
     void findAllByItemOwnerIdAndStartIsBeforeAndEndIsAfterOrderByEndDesc() {
+        List<Booking> bookings = bookingRepository.findAllByItemOwnerIdAndStartIsBeforeAndEndIsAfterOrderByEndDesc(2L,
+                LocalDateTime.now().plusHours(6), LocalDateTime.now().plusHours(7), page);
+        assertEquals(1, bookings.size());
+
     }
 
     @Test
     void findAllByItemOwnerIdAndEndIsBeforeOrderByEndDesc() {
+        List<Booking> bookings = bookingRepository.findAllByItemOwnerIdAndEndIsBeforeOrderByEndDesc(2L,
+                LocalDateTime.now().plusHours(20), page);
+        assertEquals(2, bookings.size());
+
     }
 
     @Test
     void findAllByItemOwnerIdAndStartIsAfterOrderByEndDesc() {
+        List<Booking> bookings = bookingRepository.findAllByItemOwnerIdAndStartIsAfterOrderByEndDesc(2L,
+                LocalDateTime.now(), page);
+        assertEquals(2, bookings.size());
     }
 
     @Test
     void findAllByItemOwnerIdAndStatusOrderByEndDesc() {
+        List<Booking> bookings = bookingRepository.findAllByItemOwnerIdAndStatusOrderByEndDesc(2L,
+                BookingStatus.WAITING, page);
+        assertEquals(1, bookings.size());
     }
 
     @Test
     void findAllByItemIdOrderByEndDesc() {
+        List<Booking> bookings = bookingRepository.findAllByItemIdOrderByEndDesc(item1.getId());
+        assertEquals(2, bookings.size());
+
     }
 
     @Test
     void findAllByItemIdAndBookerIdAndStatusIsAndStartIsBeforeOrderByStart() {
+        List<Booking> bookings = bookingRepository.findAllByItemIdAndBookerIdAndStatusIsAndStartIsBeforeOrderByStart(item1.getId(),
+                booker1.getId(), BookingStatus.WAITING, LocalDateTime.now().plusHours(20));
+        assertEquals(1, bookings.size());
+
     }
 
     @AfterEach

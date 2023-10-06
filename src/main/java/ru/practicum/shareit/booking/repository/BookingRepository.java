@@ -18,7 +18,7 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
     @Query("UPDATE Booking b "
             + "SET b.status = :status  "
             + "WHERE b.id = :bookingId")
-    void save(BookingStatus status, Long bookingId);
+    int updateStatus(BookingStatus status, Long bookingId);
 
     List<Booking> findAllByBookerIdOrderByEndDesc(Long bookerId, Pageable page);
 
@@ -36,12 +36,12 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
 
     List<Booking> findByItemOwnerIdOrderByEndDesc(long ownerId, Pageable page);
 
-    List<Booking> findAllByItemOwnerIdAndStartIsBeforeAndEndIsAfterOrderByEndDesc(Long bookerId,
+    List<Booking> findAllByItemOwnerIdAndStartIsBeforeAndEndIsAfterOrderByEndDesc(Long ownerId,
                                                                                   LocalDateTime start,
                                                                                   LocalDateTime end,
                                                                                   Pageable page);
 
-    List<Booking> findAllByItemOwnerIdAndEndIsBeforeOrderByEndDesc(long bookerId, LocalDateTime end, Pageable page);
+    List<Booking> findAllByItemOwnerIdAndEndIsBeforeOrderByEndDesc(long ownerId, LocalDateTime end, Pageable page);
 
 
     List<Booking> findAllByItemOwnerIdAndStartIsAfterOrderByEndDesc(long ownerId, LocalDateTime now, Pageable page);
