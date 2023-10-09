@@ -98,13 +98,13 @@ class BookingControllerTest {
     }
 
     @Test
-    void getAllBookingsFromUser() throws Exception{
+    void getAllBookingsFromUser() throws Exception {
         when(bookingService.getAllBookingsFromUser(anyLong(),
                 anyString(), anyInt(), anyInt())).thenReturn(outBookingDtoList);
         mvc.perform(get("/bookings")
-                .contentType(MediaType.APPLICATION_JSON)
-                .accept(MediaType.APPLICATION_JSON)
-                .header(BOOKER_ID, 1))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .accept(MediaType.APPLICATION_JSON)
+                        .header(BOOKER_ID, 1))
                 .andExpect(status().isOk())
                 .andDo(print())
                 .andReturn()
@@ -113,7 +113,7 @@ class BookingControllerTest {
     }
 
     @Test
-    void getAllBookingsFromOwner() throws Exception{
+    void getAllBookingsFromOwner() throws Exception {
         when(bookingService.getAllBookingsFromOwner(anyLong(),
                 anyString(), anyInt(), anyInt())).thenReturn(outBookingDtoList);
         mvc.perform(get("/bookings/owner")
@@ -128,15 +128,15 @@ class BookingControllerTest {
     }
 
     @Test
-    void update() throws Exception{
+    void update() throws Exception {
         outBookingDto.setStatus(BookingStatus.APPROVED);
         when(bookingService.approve(anyLong(), anyLong(), eq(true)))
                 .thenReturn(outBookingDto);
         mvc.perform(patch("/bookings/1")
-                .contentType(MediaType.APPLICATION_JSON)
-                .accept(MediaType.APPLICATION_JSON)
-                .header(BOOKER_ID, 1)
-                .param("approved", String.valueOf(true)))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .accept(MediaType.APPLICATION_JSON)
+                        .header(BOOKER_ID, 1)
+                        .param("approved", String.valueOf(true)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status",
                         is(BookingStatus.APPROVED.toString())));

@@ -17,7 +17,6 @@ public class BookingMapper {
                 .start(booking.getStart())
                 .end(booking.getEnd())
                 .status(booking.getStatus())
-                .status(booking.getStatus())
                 .build();
     }
 

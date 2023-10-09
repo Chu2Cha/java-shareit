@@ -67,7 +67,7 @@ public class BookingServiceImpl implements BookingService {
     public OutBookingDto approve(long bookingId, long bookerId, Boolean approved) {
         OutBookingDto booking = findById(bookingId, bookerId);
         if (booking.getItem().getOwnerId() != bookerId) {
-            throw new NotFoundException("Только тот, кто бронирует, может менять статус.");
+            throw new NotFoundException("Только владелец вещи может менять статус.");
         }
         if (booking.getStatus() != BookingStatus.WAITING) {
             throw new BadRequestException("Статус букинга не WAITING.");
