@@ -67,6 +67,14 @@ public class RequestServiceImpl implements RequestService {
         return getItemRequestDtos(itemRequestList);
     }
 
+    @Override
+    public List<ItemRequestDto> findAllRequestsForAnswer(long userId, int from, int size) {
+        userService.findUserById(userId);
+        Pageable page = PageRequest.of(from / size, size, Sort.by("created"));
+        List<ItemRequest> itemRequestList = requestRepository.findAllByRequestorIdIsNot(userId, page);
+        return getItemRequestDtos(itemRequestList);
+    }
+
     private List<ItemRequestDto> getItemRequestDtos(List<ItemRequest> itemRequestList) {
         List<ItemRequestDto> itemRequestDtoList = new ArrayList<>();
         for (ItemRequest itemRequest : itemRequestList) {
@@ -74,13 +82,5 @@ public class RequestServiceImpl implements RequestService {
             itemRequestDtoList.add(itemRequestDto);
         }
         return itemRequestDtoList;
-    }
-
-    @Override
-    public List<ItemRequestDto> findAllRequestsForAnswer(long userId, int from, int size) {
-        userService.findUserById(userId);
-        Pageable page = PageRequest.of(from / size, size, Sort.by("created"));
-        List<ItemRequest> itemRequestList = requestRepository.findAllByRequestorIdIsNot(userId, page);
-        return getItemRequestDtos(itemRequestList);
     }
 }
