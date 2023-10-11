@@ -71,6 +71,9 @@ class BookingServiceImplTest {
 
     private Booking booking;
 
+    private final LocalDateTime start = LocalDateTime.of(2024, 1, 1, 1, 11);
+    private final LocalDateTime end = LocalDateTime.of(2024, 2, 2, 2, 2);
+
 
     @BeforeEach
     void setUp() {
@@ -89,8 +92,8 @@ class BookingServiceImplTest {
 
     @Test
     void createBooking_whenInBookingDtoIsCorrect_thenReturnCorrectOutBookingDto() {
-        InBookingDto inBookingDto = new InBookingDto(LocalDateTime.now().plusHours(1),
-                LocalDateTime.now().plusHours(2), itemId);
+        InBookingDto inBookingDto = new InBookingDto(start,
+                end, itemId);
         when(userRepository.findById(anyLong())).thenReturn(Optional.of(booker));
         when(itemRepository.findById(anyLong())).thenReturn(Optional.of(item));
         when(bookingMapper.toBooking(inBookingDto, item, booker)).thenReturn(booking);
@@ -112,32 +115,32 @@ class BookingServiceImplTest {
 
     @Test
     void createBooking_whenUserIsNotFound_thenReturnNotFoundException() {
-        InBookingDto inBookingDto = new InBookingDto(LocalDateTime.now().plusHours(1),
-                LocalDateTime.now().plusHours(2), itemId);
+        InBookingDto inBookingDto = new InBookingDto(start,
+                end, itemId);
         when(userRepository.findById(anyLong())).thenReturn(Optional.empty());
         assertThrows(NotFoundException.class, () -> bookingService.createBooking(inBookingDto, 5L));
     }
 
     @Test
     void createBooking_whenEndIsBeforeStart_thenReturnBadRequestException() {
-        InBookingDto inBookingDto = new InBookingDto(LocalDateTime.now().plusHours(3),
-                LocalDateTime.now().plusHours(2), itemId);
+        InBookingDto inBookingDto = new InBookingDto(start,
+                end.minusMonths(5), itemId);
         when(userRepository.findById(anyLong())).thenReturn(Optional.of(booker));
         assertThrows(BadRequestException.class, () -> bookingService.createBooking(inBookingDto, bookerId));
     }
 
     @Test
     void createBooking_whenEndEqualsStart_thenReturnBadRequestException() {
-        InBookingDto inBookingDto = new InBookingDto(LocalDateTime.now().plusHours(2),
-                LocalDateTime.now().plusHours(2), itemId);
+        InBookingDto inBookingDto = new InBookingDto(start,
+                start, itemId);
         when(userRepository.findById(anyLong())).thenReturn(Optional.of(booker));
         assertThrows(BadRequestException.class, () -> bookingService.createBooking(inBookingDto, bookerId));
     }
 
     @Test
     void createBooking_whenItemIdIsNotFound_thenReturnNotFoundException() {
-        InBookingDto inBookingDto = new InBookingDto(LocalDateTime.now().plusHours(1),
-                LocalDateTime.now().plusHours(2), 5L);
+        InBookingDto inBookingDto = new InBookingDto(start,
+                end, 5L);
         when(userRepository.findById(anyLong())).thenReturn(Optional.of(booker));
         when(itemRepository.findById(anyLong())).thenReturn(Optional.empty());
         assertThrows(NotFoundException.class, () -> bookingService.createBooking(inBookingDto, bookerId));
@@ -145,8 +148,8 @@ class BookingServiceImplTest {
 
     @Test
     void createBooking_whenBookerIsOwner_thenReturnNotFoundException() {
-        InBookingDto inBookingDto = new InBookingDto(LocalDateTime.now().plusHours(1),
-                LocalDateTime.now().plusHours(2), itemId);
+        InBookingDto inBookingDto = new InBookingDto(start,
+                end, itemId);
         when(userRepository.findById(anyLong())).thenReturn(Optional.of(booker));
         when(itemRepository.findById(anyLong())).thenReturn(Optional.of(item));
         assertThrows(NotFoundException.class, () -> bookingService.createBooking(inBookingDto, ownerId));
@@ -155,8 +158,8 @@ class BookingServiceImplTest {
     @Test
     void createBooking_whenBookingIsNotAvailable_thenReturnBadRequestException() {
         item.setAvailable(false);
-        InBookingDto inBookingDto = new InBookingDto(LocalDateTime.now().plusHours(1),
-                LocalDateTime.now().plusHours(2), itemId);
+        InBookingDto inBookingDto = new InBookingDto(start,
+                end, itemId);
         when(userRepository.findById(anyLong())).thenReturn(Optional.of(booker));
         when(itemRepository.findById(anyLong())).thenReturn(Optional.of(item));
         assertThrows(BadRequestException.class, () -> bookingService.createBooking(inBookingDto, bookerId));
@@ -168,8 +171,8 @@ class BookingServiceImplTest {
         booking.setBooker(booker);
         booking.setItem(item);
         booking.setStatus(BookingStatus.WAITING);
-        InBookingDto inBookingDto = new InBookingDto(LocalDateTime.now().plusHours(1),
-                LocalDateTime.now().plusHours(2), itemId);
+        InBookingDto inBookingDto = new InBookingDto(start,
+                end, itemId);
         when(bookingRepository.findById(anyLong())).thenReturn(Optional.of(booking));
         when(bookingMapper.toOutBookingDto(any())).thenReturn(OutBookingDto.builder()
                 .start(inBookingDto.getStart())
@@ -189,8 +192,8 @@ class BookingServiceImplTest {
         booking.setBooker(booker);
         booking.setItem(item);
         booking.setStatus(BookingStatus.WAITING);
-        InBookingDto inBookingDto = new InBookingDto(LocalDateTime.now().plusHours(1),
-                LocalDateTime.now().plusHours(2), itemId);
+        InBookingDto inBookingDto = new InBookingDto(start,
+                end, itemId);
         when(bookingRepository.findById(anyLong())).thenReturn(Optional.of(booking));
         when(bookingMapper.toOutBookingDto(any())).thenReturn(OutBookingDto.builder()
                 .start(inBookingDto.getStart())
@@ -211,8 +214,8 @@ class BookingServiceImplTest {
         booking.setBooker(booker);
         booking.setItem(item);
         booking.setStatus(BookingStatus.WAITING);
-        InBookingDto inBookingDto = new InBookingDto(LocalDateTime.now().plusHours(1),
-                LocalDateTime.now().plusHours(2), itemId);
+        InBookingDto inBookingDto = new InBookingDto(start,
+                end, itemId);
         when(bookingRepository.findById(anyLong())).thenReturn(Optional.of(booking));
         when(bookingMapper.toOutBookingDto(any())).thenReturn(OutBookingDto.builder()
                 .start(inBookingDto.getStart())
@@ -233,8 +236,8 @@ class BookingServiceImplTest {
         booking.setBooker(booker);
         booking.setItem(item);
         booking.setStatus(BookingStatus.WAITING);
-        InBookingDto inBookingDto = new InBookingDto(LocalDateTime.now().plusHours(1),
-                LocalDateTime.now().plusHours(2), itemId);
+        InBookingDto inBookingDto = new InBookingDto(start,
+                end, itemId);
         when(bookingRepository.findById(anyLong())).thenReturn(Optional.of(booking));
         when(bookingMapper.toOutBookingDto(any())).thenReturn(OutBookingDto.builder()
                 .start(inBookingDto.getStart())
@@ -253,8 +256,8 @@ class BookingServiceImplTest {
     void findById_whenBookerIDIsCorrect_thenReturnOutBookingDto() {
         booking.setId(1L);
         booking.setBooker(booker);
-        InBookingDto inBookingDto = new InBookingDto(LocalDateTime.now().plusHours(1),
-                LocalDateTime.now().plusHours(2), itemId);
+        InBookingDto inBookingDto = new InBookingDto(start,
+                end, itemId);
         when(bookingRepository.findById(anyLong())).thenReturn(Optional.of(booking));
         when(bookingMapper.toOutBookingDto(any())).thenReturn(OutBookingDto.builder()
                 .start(inBookingDto.getStart())
