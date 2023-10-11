@@ -40,20 +40,20 @@ class ItemRequestControllerTest {
     @MockBean
     private RequestService requestService;
 
-    private static final String REQUESTOR_ID = "X-Sharer-User-Id";
+    private static final String REQUESTER_ID = "X-Sharer-User-Id";
 
     private ItemRequestDto itemRequestDto;
 
     @BeforeEach
     void setUp() {
-        UserDto requestor = new UserDto(1L, "Requestor", "mail@mail.ru");
+        UserDto requester = new UserDto(1L, "Requester", "mail@mail.ru");
         ItemDto itemDto = new ItemDto(1L, "Item",
                 "ItemDescription", true, 1L, 1L,
                 null, null, List.of());
         itemRequestDto = ItemRequestDto.builder()
                 .id(1L)
                 .description("RequestDescription")
-                .requestor(requestor)
+                .requester(requester)
                 .created(LocalDateTime.now().plusHours(1))
                 .items(List.of(itemDto))
                 .build();
@@ -67,7 +67,7 @@ class ItemRequestControllerTest {
                         .content(mapper.writeValueAsString(itemRequestDto))
                         .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaType.APPLICATION_JSON)
-                        .header(REQUESTOR_ID, 1))
+                        .header(REQUESTER_ID, 1))
                 .andDo(result -> System.out.println("Response body: " + result.getResponse().getContentAsString()))
                 .andExpect(status().isOk())
                 .andReturn();
@@ -80,7 +80,7 @@ class ItemRequestControllerTest {
         mvc.perform(get("/requests/1")
                         .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaType.APPLICATION_JSON)
-                        .header(REQUESTOR_ID, 1))
+                        .header(REQUESTER_ID, 1))
                 .andDo(result -> System.out.println("Response body: " + result.getResponse().getContentAsString()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id", is(itemRequestDto.getId()), Long.class));
@@ -92,7 +92,7 @@ class ItemRequestControllerTest {
         mvc.perform(get("/requests")
                         .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaType.APPLICATION_JSON)
-                        .header(REQUESTOR_ID, 1))
+                        .header(REQUESTER_ID, 1))
                 .andExpect(status().isOk())
                 .andDo(print())
                 .andReturn()
@@ -107,7 +107,7 @@ class ItemRequestControllerTest {
         mvc.perform(get("/requests/all")
                         .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaType.APPLICATION_JSON)
-                        .header(REQUESTOR_ID, 1))
+                        .header(REQUESTER_ID, 1))
                 .andExpect(status().isOk())
                 .andDo(print())
                 .andReturn()

@@ -21,7 +21,7 @@ public class ItemRequestDto {
     @NotBlank
     private String description;
 
-    private UserDto requestor;
+    private UserDto requester;
 
     @FutureOrPresent
     private LocalDateTime created;

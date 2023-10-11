@@ -44,29 +44,29 @@ class RequestRepositoryTest {
 
         ItemRequest itemRequest1 = new ItemRequest();
         itemRequest1.setDescription("FirstRequest");
-        itemRequest1.setRequestor(user1);
+        itemRequest1.setRequester(user1);
         itemRequest1.setCreated(LocalDateTime.of(2023, 10, 2, 11, 22));
         requestRepository.save(itemRequest1);
 
         ItemRequest itemRequest2 = new ItemRequest();
         itemRequest2.setDescription("SecondRequest");
-        itemRequest2.setRequestor(user2);
+        itemRequest2.setRequester(user2);
         itemRequest2.setCreated(LocalDateTime.of(2023, 10, 4, 12, 33));
         requestRepository.save(itemRequest2);
     }
 
     @Test
-    void findAllByRequestorIdOrderByCreatedDesc() {
-        List<ItemRequest> requests = requestRepository.findAllByRequestorIdOrderByCreatedDesc(user1.getId());
+    void findAllByRequesterIdOrderByCreatedDesc() {
+        List<ItemRequest> requests = requestRepository.findAllByRequesterIdOrderByCreatedDesc(user1.getId());
         assertEquals(1, requests.size());
-        assertEquals("Name1", requests.get(0).getRequestor().getName());
+        assertEquals("Name1", requests.get(0).getRequester().getName());
     }
 
     @Test
-    void findAllByRequestorIdIsNot() {
-        List<ItemRequest> requests = requestRepository.findAllByRequestorIdIsNot(user2.getId(), page);
+    void findAllByRequesterIdIsNot() {
+        List<ItemRequest> requests = requestRepository.findAllByRequesterIdIsNot(user2.getId(), page);
         assertEquals(1, requests.size());
-        assertEquals("Name1", requests.get(0).getRequestor().getName());
+        assertEquals("Name1", requests.get(0).getRequester().getName());
     }
 
     @AfterEach

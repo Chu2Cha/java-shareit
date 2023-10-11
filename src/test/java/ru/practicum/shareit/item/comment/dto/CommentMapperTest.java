@@ -23,12 +23,10 @@ class CommentMapperTest {
 
     private Comment comment;
     private CommentDto commentDto;
-    private Item item;
-    private User author;
 
     @BeforeEach
     void setUp() {
-        author = new User();
+        User author = new User();
         author.setId(1L);
         UserDto authorDto = new UserDto();
         authorDto.setId(author.getId());

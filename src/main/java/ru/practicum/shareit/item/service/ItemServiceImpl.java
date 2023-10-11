@@ -100,8 +100,8 @@ public class ItemServiceImpl implements ItemService {
 
     private void makeCommentDtoList(ItemDto itemDto) {
         List<Comment> comments = commentRepository.findAllByItemId(itemDto.getId());
-        List<CommentDto> commentDtos = comments.stream().map(commentMapper::toCommentDto).collect(Collectors.toList());
-        itemDto.setComments(commentDtos);
+        List<CommentDto> commentDtoList = comments.stream().map(commentMapper::toCommentDto).collect(Collectors.toList());
+        itemDto.setComments(commentDtoList);
     }
 
     @Override

@@ -22,16 +22,16 @@ class RequestMapperTest {
     @InjectMocks
     private RequestMapper requestMapper;
 
-    private User requestor;
+    private User requester;
     private ItemRequest itemRequest;
     private ItemRequestDto itemRequestDto;
 
     @BeforeEach
     void setUp() {
-        requestor = new User();
-        requestor.setId(1L);
-        UserDto requestorDto = new UserDto();
-        requestorDto.setId(requestor.getId());
+        requester = new User();
+        requester.setId(1L);
+        UserDto requesterDto = new UserDto();
+        requesterDto.setId(requester.getId());
 
         Item item = new Item();
         item.setId(1L);
@@ -40,16 +40,16 @@ class RequestMapperTest {
         itemDto.setId(item.getId());
         itemDto.setOwnerId(itemDto.getOwnerId());
 
-        itemRequest = new ItemRequest(1L, "Requset", requestor,
+        itemRequest = new ItemRequest(1L, "Request", requester,
                 LocalDateTime.now(), List.of(item));
         itemRequestDto = new ItemRequestDto(itemRequest.getId(), item.getDescription(),
-                requestorDto, itemRequest.getCreated(), List.of(itemDto));
+                requesterDto, itemRequest.getCreated(), List.of(itemDto));
     }
 
     @Test
     void toRequest() {
-        ItemRequest newRequest = requestMapper.toRequest(itemRequestDto, requestor);
-        assertEquals(newRequest.getRequestor(), requestor);
+        ItemRequest newRequest = requestMapper.toRequest(itemRequestDto, requester);
+        assertEquals(newRequest.getRequester(), requester);
         assertEquals(newRequest.getDescription(), itemRequestDto.getDescription());
     }
 

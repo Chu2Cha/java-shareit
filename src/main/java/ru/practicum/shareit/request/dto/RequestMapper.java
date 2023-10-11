@@ -10,12 +10,12 @@ import ru.practicum.shareit.user.model.User;
 @AllArgsConstructor
 public class RequestMapper {
 
-    public ItemRequest toRequest(ItemRequestDto requestDto, User requestor) {
+    public ItemRequest toRequest(ItemRequestDto requestDto, User requester) {
         return ItemRequest.builder()
                 .id(requestDto.getId())
                 .description(requestDto.getDescription())
                 .created(requestDto.getCreated())
-                .requestor(requestor)
+                .requester(requester)
                 .build();
 
     }

@@ -34,13 +34,13 @@ public class RequestServiceImpl implements RequestService {
     private final ItemMapper itemMapper;
 
     @Override
-    public ItemRequestDto create(ItemRequestDto requestDto, long requestorId) {
-        userService.findUserById(requestorId);
-        User requestor = userRepository.findById(requestorId).orElseThrow(
-                () -> new NotFoundException("Пользователь с id " + requestorId + " не найден."));
+    public ItemRequestDto create(ItemRequestDto requestDto, long requesterId) {
+        userService.findUserById(requesterId);
+        User requester = userRepository.findById(requesterId).orElseThrow(
+                () -> new NotFoundException("Пользователь с id " + requesterId + " не найден."));
         LocalDateTime now = LocalDateTime.now();
         requestDto.setCreated(now);
-        ItemRequest itemRequest = requestMapper.toRequest(requestDto, requestor);
+        ItemRequest itemRequest = requestMapper.toRequest(requestDto, requester);
         return requestMapper.toRequestDto(requestRepository.save(itemRequest));
     }
 
@@ -51,7 +51,7 @@ public class RequestServiceImpl implements RequestService {
                 .orElseThrow(() -> new NotFoundException("Запрос не найден."));
         long requestId = itemRequest.getId();
         ItemRequestDto itemRequestDto = requestMapper.toRequestDto(itemRequest);
-        itemRequestDto.setRequestor(userService.findUserById(itemRequest.getRequestor().getId()));
+        itemRequestDto.setRequester(userService.findUserById(itemRequest.getRequester().getId()));
         List<ItemDto> itemDtoList = itemRepository.findByRequestId(requestId).stream()
                 .map(itemMapper::toItemDto)
                 .collect(Collectors.toList());
@@ -61,24 +61,24 @@ public class RequestServiceImpl implements RequestService {
 
 
     @Override
-    public List<ItemRequestDto> findAllFromUser(long requestorId) {
-        userService.findUserById(requestorId);
-        List<ItemRequest> itemRequestList = requestRepository.findAllByRequestorIdOrderByCreatedDesc(requestorId);
-        return getItemRequestDtos(itemRequestList);
+    public List<ItemRequestDto> findAllFromUser(long requesterId) {
+        userService.findUserById(requesterId);
+        List<ItemRequest> itemRequestList = requestRepository.findAllByRequesterIdOrderByCreatedDesc(requesterId);
+        return getItemRequestDtoList(itemRequestList);
     }
 
     @Override
     public List<ItemRequestDto> findAllRequestsForAnswer(long userId, int from, int size) {
         userService.findUserById(userId);
         Pageable page = PageRequest.of(from / size, size, Sort.by("created"));
-        List<ItemRequest> itemRequestList = requestRepository.findAllByRequestorIdIsNot(userId, page);
-        return getItemRequestDtos(itemRequestList);
+        List<ItemRequest> itemRequestList = requestRepository.findAllByRequesterIdIsNot(userId, page);
+        return getItemRequestDtoList(itemRequestList);
     }
 
-    private List<ItemRequestDto> getItemRequestDtos(List<ItemRequest> itemRequestList) {
+    private List<ItemRequestDto> getItemRequestDtoList(List<ItemRequest> itemRequestList) {
         List<ItemRequestDto> itemRequestDtoList = new ArrayList<>();
         for (ItemRequest itemRequest : itemRequestList) {
-            ItemRequestDto itemRequestDto = findById(itemRequest.getId(), itemRequest.getRequestor().getId());
+            ItemRequestDto itemRequestDto = findById(itemRequest.getId(), itemRequest.getRequester().getId());
             itemRequestDtoList.add(itemRequestDto);
         }
         return itemRequestDtoList;

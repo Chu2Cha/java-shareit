@@ -15,7 +15,7 @@ import java.util.List;
 @RequestMapping(path = "/requests")
 public class ItemRequestController {
 
-    private static final String REQUESTOR_ID = "X-Sharer-User-Id";
+    private static final String REQUESTER_ID = "X-Sharer-User-Id";
 
     private final RequestService requestService;
 
@@ -25,23 +25,23 @@ public class ItemRequestController {
 
     @PostMapping
     public ItemRequestDto create(@Valid @RequestBody ItemRequestDto requestDto,
-                             @RequestHeader(REQUESTOR_ID) long requestorId) {
-        return requestService.create(requestDto, requestorId);
+                             @RequestHeader(REQUESTER_ID) long requesterId) {
+        return requestService.create(requestDto, requesterId);
     }
 
 
     @GetMapping("/{id}")
-    public ItemRequestDto getRequest(@PathVariable("id") long id, @RequestHeader(REQUESTOR_ID) long userId) {
+    public ItemRequestDto getRequest(@PathVariable("id") long id, @RequestHeader(REQUESTER_ID) long userId) {
         return requestService.findById(id, userId);
     }
 
     @GetMapping
-    public List<ItemRequestDto> getAllUserRequests(@RequestHeader(REQUESTOR_ID) long requestorId) {
-        return requestService.findAllFromUser(requestorId);
+    public List<ItemRequestDto> getAllUserRequests(@RequestHeader(REQUESTER_ID) long requesterId) {
+        return requestService.findAllFromUser(requesterId);
     }
 
     @GetMapping("/all")
-    public List<ItemRequestDto> getAllRequestsForAnswer(@RequestHeader(REQUESTOR_ID) long userId,
+    public List<ItemRequestDto> getAllRequestsForAnswer(@RequestHeader(REQUESTER_ID) long userId,
                                                         @PositiveOrZero @RequestParam (defaultValue = "0") int from,
                                                         @PositiveOrZero @RequestParam(defaultValue = "10") int size) {
         return requestService.findAllRequestsForAnswer(userId, from, size);

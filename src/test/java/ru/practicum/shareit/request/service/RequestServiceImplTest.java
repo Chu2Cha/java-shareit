@@ -29,7 +29,6 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.when;
-import static org.postgresql.hostchooser.HostRequirement.any;
 
 @ExtendWith(MockitoExtension.class)
 class RequestServiceImplTest {
@@ -107,7 +106,7 @@ class RequestServiceImplTest {
 
         ItemRequestDto resultDto = requestService.findById(itemRequest.getId(), requestorId);
         assertNotNull(resultDto);
-        assertEquals(resultDto.getRequestor(), itemRequestDto.getRequestor());
+        assertEquals(resultDto.getRequester(), itemRequestDto.getRequester());
     }
 
     @Test
@@ -120,7 +119,7 @@ class RequestServiceImplTest {
     @Test
     void findAllFromUser() {
         when(userService.findUserById(anyLong())).thenReturn(requstorDto);
-        when(requestRepository.findAllByRequestorIdOrderByCreatedDesc(anyLong()))
+        when(requestRepository.findAllByRequesterIdOrderByCreatedDesc(anyLong()))
                 .thenReturn(List.of(itemRequest));
         when(requestRepository.findById(itemRequest.getId())).thenReturn(Optional.of(itemRequest));
         when(requestMapper.toRequestDto(any())).thenReturn(itemRequestDto);
@@ -135,7 +134,7 @@ class RequestServiceImplTest {
     @Test
     void findAllRequestsForAnswer() {
         when(userService.findUserById(anyLong())).thenReturn(requstorDto);
-        when(requestRepository.findAllByRequestorIdIsNot(anyLong(), any()))
+        when(requestRepository.findAllByRequesterIdIsNot(anyLong(), any()))
                 .thenReturn(List.of(itemRequest));
         when(requestRepository.findById(itemRequest.getId())).thenReturn(Optional.of(itemRequest));
         when(requestMapper.toRequestDto(any())).thenReturn(itemRequestDto);
