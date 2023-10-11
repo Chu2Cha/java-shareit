@@ -88,7 +88,7 @@ public class ItemServiceImpl implements ItemService {
 
     @Override
     public ItemDto findById(long id, long userId) {
-       UserDto userDto = userService.findUserById(userId);  // выбрасывает ошибку, если неавторизованный пользователь зайдет.
+        UserDto userDto = userService.findUserById(userId);  // выбрасывает ошибку, если неавторизованный пользователь зайдет.
         ItemDto itemDto = itemMapper.toItemDto(itemRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Предмет с id " + id + " не найден.")));
         if (itemDto.getOwnerId() == userDto.getId()) {
