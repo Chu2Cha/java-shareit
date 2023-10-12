@@ -1,6 +1,8 @@
 package ru.practicum.shareit.booking.service;
 
 import lombok.AllArgsConstructor;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.shareit.booking.dto.InBookingDto;
@@ -65,7 +67,7 @@ public class BookingServiceImpl implements BookingService {
     public OutBookingDto approve(long bookingId, long bookerId, Boolean approved) {
         OutBookingDto booking = findById(bookingId, bookerId);
         if (booking.getItem().getOwnerId() != bookerId) {
-            throw new NotFoundException("Только тот, кто бронирует, может менять статус.");
+            throw new NotFoundException("Только владелец вещи может менять статус.");
         }
         if (booking.getStatus() != BookingStatus.WAITING) {
             throw new BadRequestException("Статус букинга не WAITING.");
@@ -75,7 +77,7 @@ public class BookingServiceImpl implements BookingService {
         } else {
             booking.setStatus(BookingStatus.REJECTED);
         }
-        bookingRepository.save(booking.getStatus(), bookingId);
+        bookingRepository.updateStatus(booking.getStatus(), bookingId);
         return booking;
     }
 
@@ -94,34 +96,35 @@ public class BookingServiceImpl implements BookingService {
 
     @Override
     @Transactional
-    public List<OutBookingDto> getAllBookingsFromUser(long bookerId, String state) {
+    public List<OutBookingDto> getAllBookingsFromUser(long bookerId, String state, int from, int size) {
         userService.findUserById(bookerId);
         LocalDateTime now = LocalDateTime.now();
         List<Booking> bookingList;
+        Pageable page = PageRequest.of(from / size, size);
         switch (state) {
             case "ALL":
                 bookingList = bookingRepository
-                        .findAllByBookerIdOrderByEndDesc(bookerId);
+                        .findAllByBookerIdOrderByEndDesc(bookerId, page);
                 break;
             case "CURRENT":
                 bookingList = bookingRepository
-                        .findAllByBookerIdAndStartIsBeforeAndEndIsAfterOrderByEndDesc(bookerId, now, now);
+                        .findAllByBookerIdAndStartIsBeforeAndEndIsAfterOrderByEndDesc(bookerId, now, now, page);
                 break;
             case "PAST":
                 bookingList = bookingRepository
-                        .findAllByBookerIdAndEndIsBeforeOrderByEndDesc(bookerId, now);
+                        .findAllByBookerIdAndEndIsBeforeOrderByEndDesc(bookerId, now, page);
                 break;
             case "FUTURE":
                 bookingList = bookingRepository
-                        .findAllByBookerIdAndStartIsAfterOrderByEndDesc(bookerId, now);
+                        .findAllByBookerIdAndStartIsAfterOrderByEndDesc(bookerId, now, page);
                 break;
             case "WAITING":
                 bookingList = bookingRepository
-                        .findAllByBookerIdAndStatusOrderByEndDesc(bookerId, BookingStatus.WAITING);
+                        .findAllByBookerIdAndStatusOrderByEndDesc(bookerId, BookingStatus.WAITING, page);
                 break;
             case "REJECTED":
                 bookingList = bookingRepository
-                        .findAllByBookerIdAndStatusOrderByEndDesc(bookerId, BookingStatus.REJECTED);
+                        .findAllByBookerIdAndStatusOrderByEndDesc(bookerId, BookingStatus.REJECTED, page);
                 break;
             default:
                 throw new BadRequestException("Unknown state: UNSUPPORTED_STATUS");
@@ -135,34 +138,35 @@ public class BookingServiceImpl implements BookingService {
     }
 
     @Override
-    public List<OutBookingDto> getAllBookingsFromOwner(long ownerId, String state) {
+    public List<OutBookingDto> getAllBookingsFromOwner(long ownerId, String state, int from, int size) {
         userService.findUserById(ownerId);
         LocalDateTime now = LocalDateTime.now();
+        Pageable page = PageRequest.of(from / size, size);
         List<Booking> bookingList;
         switch (state) {
             case "ALL":
                 bookingList = bookingRepository
-                        .findByItemOwnerIdOrderByEndDesc(ownerId);
+                        .findByItemOwnerIdOrderByEndDesc(ownerId, page);
                 break;
             case "CURRENT":
                 bookingList = bookingRepository
-                        .findAllByItemOwnerIdAndStartIsBeforeAndEndIsAfterOrderByEndDesc(ownerId, now, now);
+                        .findAllByItemOwnerIdAndStartIsBeforeAndEndIsAfterOrderByEndDesc(ownerId, now, now, page);
                 break;
             case "PAST":
                 bookingList = bookingRepository
-                        .findAllByItemOwnerIdAndEndIsBeforeOrderByEndDesc(ownerId, now);
+                        .findAllByItemOwnerIdAndEndIsBeforeOrderByEndDesc(ownerId, now, page);
                 break;
             case "FUTURE":
                 bookingList = bookingRepository
-                        .findAllByItemOwnerIdAndStartIsAfterOrderByEndDesc(ownerId, now);
+                        .findAllByItemOwnerIdAndStartIsAfterOrderByEndDesc(ownerId, now, page);
                 break;
             case "WAITING":
                 bookingList = bookingRepository
-                        .findAllByItemOwnerIdAndStatusOrderByEndDesc(ownerId, BookingStatus.WAITING);
+                        .findAllByItemOwnerIdAndStatusOrderByEndDesc(ownerId, BookingStatus.WAITING, page);
                 break;
             case "REJECTED":
                 bookingList = bookingRepository
-                        .findAllByItemOwnerIdAndStatusOrderByEndDesc(ownerId, BookingStatus.REJECTED);
+                        .findAllByItemOwnerIdAndStatusOrderByEndDesc(ownerId, BookingStatus.REJECTED, page);
                 break;
             default:
                 throw new BadRequestException("Unknown state: UNSUPPORTED_STATUS");

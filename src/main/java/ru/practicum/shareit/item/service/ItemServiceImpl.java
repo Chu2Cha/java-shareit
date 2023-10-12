@@ -1,6 +1,8 @@
 package ru.practicum.shareit.item.service;
 
 import lombok.AllArgsConstructor;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import ru.practicum.shareit.booking.dto.BookingMapper;
 import ru.practicum.shareit.booking.model.Booking;
@@ -16,6 +18,9 @@ import ru.practicum.shareit.item.dto.ItemDto;
 import ru.practicum.shareit.item.dto.ItemMapper;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.item.repository.ItemRepository;
+import ru.practicum.shareit.request.dto.RequestMapper;
+import ru.practicum.shareit.request.service.RequestService;
+import ru.practicum.shareit.user.dto.UserDto;
 import ru.practicum.shareit.user.dto.UserMapper;
 import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.service.UserService;
@@ -36,12 +41,14 @@ public class ItemServiceImpl implements ItemService {
     private final CommentMapper commentMapper;
     private final CommentRepository commentRepository;
     private final UserMapper userMapper;
+    private final RequestMapper requestMapper;
+    private final RequestService requestService;
 
 
     @Override
-    public List<ItemDto> getAllItemsFromUser(long ownerId) {
-
-        List<ItemDto> itemDtoList = itemRepository.findAllByOwnerId(ownerId).stream()
+    public List<ItemDto> getAllItemsFromUser(long ownerId, int from, int size) {
+        Pageable page = PageRequest.of(from / size, size);
+        List<ItemDto> itemDtoList = itemRepository.findAllByOwnerIdOrderByIdAsc(ownerId, page).stream()
                 .map(itemMapper::toItemDto)
                 .collect(Collectors.toList());
         for (ItemDto itemDto : itemDtoList) {
@@ -53,10 +60,11 @@ public class ItemServiceImpl implements ItemService {
 
     @Override
     public ItemDto createItem(ItemDto itemDto, long ownerId) {
-        userService.findUserById(ownerId);
+        User owner = userMapper.toUser(userService.findUserById(ownerId));
         Item item = itemMapper.toItem(itemDto);
         item.setOwnerId(ownerId);
-        item.setRequest(null);
+        item.setRequest(itemDto.getRequestId() != null ?
+                requestMapper.toRequest(requestService.findById(itemDto.getRequestId(), ownerId), owner) : null);
         return itemMapper.toItemDto(itemRepository.save(item));
     }
 
@@ -80,10 +88,10 @@ public class ItemServiceImpl implements ItemService {
 
     @Override
     public ItemDto findById(long id, long userId) {
-        userService.findUserById(userId);  // выбрасывает ошибку, если неавторизованный пользователь зайдет.
+        UserDto userDto = userService.findUserById(userId);  // выбрасывает ошибку, если неавторизованный пользователь зайдет.
         ItemDto itemDto = itemMapper.toItemDto(itemRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Предмет с id " + id + " не найден.")));
-        if (itemDto.getOwnerId() == userId) {
+        if (itemDto.getOwnerId() == userDto.getId()) {
             updateBookings(itemDto);
         }
         makeCommentDtoList(itemDto);
@@ -92,8 +100,8 @@ public class ItemServiceImpl implements ItemService {
 
     private void makeCommentDtoList(ItemDto itemDto) {
         List<Comment> comments = commentRepository.findAllByItemId(itemDto.getId());
-        List<CommentDto> commentDtos = comments.stream().map(commentMapper::toCommentDto).collect(Collectors.toList());
-        itemDto.setComments(commentDtos);
+        List<CommentDto> commentDtoList = comments.stream().map(commentMapper::toCommentDto).collect(Collectors.toList());
+        itemDto.setComments(commentDtoList);
     }
 
     @Override
@@ -103,22 +111,20 @@ public class ItemServiceImpl implements ItemService {
     }
 
     @Override
-    public List<ItemDto> searchItems(String message, long ownerId) {
+    public List<ItemDto> searchItems(String message, long ownerId, int from, int size) {
         userService.findUserById(ownerId);
+        Pageable page = PageRequest.of(from / size, size);
         if (checkEmptyMessage(message)) {
             return Collections.emptyList();
         }
-        return itemRepository.findAll().stream()
-                .filter(item -> item.getAvailable() &&
-                        (item.getName().toLowerCase().contains(message.toLowerCase()) ||
-                                item.getDescription().toLowerCase().contains(message.toLowerCase())))
+        return itemRepository.searchItems(message, page).stream()
                 .map(itemMapper::toItemDto)
                 .collect(Collectors.toList());
     }
 
     @Override
     public CommentDto addComment(long itemId, long userId, CommentDto commentDto) {
-        if (commentDto.getText().isEmpty() || commentDto.getText() == null) {
+        if (commentDto.getText().isEmpty()) {
             throw new BadRequestException("Ошибка: пустой комментарий!");
         }
         Item item = itemMapper.toItem(findById(itemId, userId));
@@ -140,6 +146,7 @@ public class ItemServiceImpl implements ItemService {
             return commentMapper.toCommentDto(commentRepository.save(comment));
         } else throw new BadRequestException(String.format("Не найден пользователь %d с предметом %d", userId, itemId));
     }
+
 
     private boolean checkEmptyMessage(String message) {
         return message == null || message.trim().isEmpty();
