@@ -16,6 +16,7 @@ import ru.practicum.shareit.request.dto.RequestMapper;
 import ru.practicum.shareit.request.model.ItemRequest;
 import ru.practicum.shareit.request.repository.RequestRepository;
 import ru.practicum.shareit.user.dto.UserDto;
+import ru.practicum.shareit.user.dto.UserMapper;
 import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.repository.UserRepository;
 import ru.practicum.shareit.user.service.UserService;
@@ -38,6 +39,9 @@ class RequestServiceImplTest {
 
     @Mock
     private UserService userService;
+
+    @Mock
+    private UserMapper userMapper;
     @Mock
     private RequestMapper requestMapper;
     @Mock
@@ -49,47 +53,46 @@ class RequestServiceImplTest {
     @Mock
     private ItemMapper itemMapper;
 
-    User requestor;
-    UserDto requstorDto;
+    User requester;
+    UserDto requesterDto;
     ItemRequest itemRequest;
     ItemRequestDto itemRequestDto;
-    Long requestorId;
+    Long requesterId;
 
     Item item;
     ItemDto itemDto;
 
     @BeforeEach
     void setUp() {
-        requestorId = 1L;
-        requestor = new User(requestorId, "Requestor", "req@mail.ru");
-        requstorDto = new UserDto(requestor.getId(), requestor.getName(), requestor.getEmail());
+        requesterId = 1L;
+        requester = new User(requesterId, "Requester", "req@mail.ru");
+        requesterDto = new UserDto(requester.getId(), requester.getName(), requester.getEmail());
         item = new Item(1L, "ItemName", "ItemDescription",
-                true, requestorId, null, null, null);
+                true, requesterId, null, null, null);
         itemDto = new ItemDto(item.getId(), item.getName(), item.getDescription(),
-                item.getAvailable(), null, requestorId, null,
+                item.getAvailable(), null, requesterId, null,
                 null, Collections.emptyList());
-        itemRequest = new ItemRequest(1L, "Request", requestor,
+        itemRequest = new ItemRequest(1L, "Request", requester,
                 LocalDateTime.now().plusHours(1), List.of(item));
         itemRequestDto = new ItemRequestDto(itemRequest.getId(), itemRequest.getDescription(),
-                requstorDto, itemRequest.getCreated(), List.of(itemDto));
+                requesterDto, itemRequest.getCreated(), List.of(itemDto));
     }
 
     @Test
-    void create_whenRequestorIsFound_thenReturnSuccess() {
-        when(userService.findUserById(anyLong())).thenReturn(requstorDto);
-        when(userRepository.findById(anyLong())).thenReturn(Optional.of(requestor));
+    void create_whenRequesterIsFound_thenReturnSuccess() {
+        when(userRepository.findById(anyLong())).thenReturn(Optional.of(requester));
         when(requestMapper.toRequest(any(), any())).thenReturn(itemRequest);
         when(requestRepository.save(any())).thenReturn(itemRequest);
         when(requestMapper.toRequestDto(any())).thenReturn(itemRequestDto);
 
-        ItemRequestDto resultDto = requestService.create(itemRequestDto, requestorId);
+        ItemRequestDto resultDto = requestService.create(itemRequestDto, requesterId);
 
         assertNotNull(resultDto);
         assertEquals(resultDto.getDescription(), itemRequestDto.getDescription());
     }
 
     @Test
-    void create_whenRequestorNotFound_thenReturnNotFoundException() {
+    void create_whenRequesterNotFound_thenReturnNotFoundException() {
         when(userRepository.findById(anyLong())).thenReturn(Optional.empty());
 
         assertThrows(NotFoundException.class, () -> requestService.create(itemRequestDto, -5L));
@@ -97,51 +100,50 @@ class RequestServiceImplTest {
 
     @Test
     void findById_whenRequestIsFound_thenSuccess() {
-        when(userService.findUserById(anyLong())).thenReturn(requstorDto);
+        when(userService.findUserById(anyLong())).thenReturn(requesterDto);
         when(requestRepository.findById(itemRequest.getId())).thenReturn(Optional.of(itemRequest));
         when(requestMapper.toRequestDto(any())).thenReturn(itemRequestDto);
-        when(userService.findUserById(anyLong())).thenReturn(requstorDto);
+        when(userService.findUserById(anyLong())).thenReturn(requesterDto);
         when(itemRepository.findByRequestId(anyLong())).thenReturn(List.of(item));
         when(itemMapper.toItemDto(any())).thenReturn(itemDto);
+        when(userMapper.toUserDto(any())).thenReturn(requesterDto);
 
-        ItemRequestDto resultDto = requestService.findById(itemRequest.getId(), requestorId);
+        ItemRequestDto resultDto = requestService.findById(itemRequest.getId(), requesterId);
         assertNotNull(resultDto);
         assertEquals(resultDto.getRequester(), itemRequestDto.getRequester());
     }
 
     @Test
     void findById_whenRequestNotFound_thenReturnNotFoundException() {
-        when(userService.findUserById(anyLong())).thenReturn(requstorDto);
+        when(userService.findUserById(anyLong())).thenReturn(requesterDto);
         when(requestRepository.findById(anyLong())).thenReturn(Optional.empty());
-        assertThrows(NotFoundException.class, () -> requestService.findById(-1L, requestorId));
+        assertThrows(NotFoundException.class, () -> requestService.findById(-1L, requesterId));
     }
 
     @Test
     void findAllFromUser() {
-        when(userService.findUserById(anyLong())).thenReturn(requstorDto);
+        when(userService.findUserById(anyLong())).thenReturn(requesterDto);
         when(requestRepository.findAllByRequesterIdOrderByCreatedDesc(anyLong()))
                 .thenReturn(List.of(itemRequest));
-        when(requestRepository.findById(itemRequest.getId())).thenReturn(Optional.of(itemRequest));
         when(requestMapper.toRequestDto(any())).thenReturn(itemRequestDto);
-        when(userService.findUserById(anyLong())).thenReturn(requstorDto);
+        when(userService.findUserById(anyLong())).thenReturn(requesterDto);
         when(itemRepository.findByRequestId(anyLong())).thenReturn(List.of(item));
         when(itemMapper.toItemDto(any())).thenReturn(itemDto);
-        List<ItemRequestDto> itemRequestDtoList = requestService.findAllFromUser(requestorId);
+        List<ItemRequestDto> itemRequestDtoList = requestService.findAllFromUser(requesterId);
 
         assertEquals(1, itemRequestDtoList.size());
     }
 
     @Test
     void findAllRequestsForAnswer() {
-        when(userService.findUserById(anyLong())).thenReturn(requstorDto);
+        when(userService.findUserById(anyLong())).thenReturn(requesterDto);
         when(requestRepository.findAllByRequesterIdIsNot(anyLong(), any()))
                 .thenReturn(List.of(itemRequest));
-        when(requestRepository.findById(itemRequest.getId())).thenReturn(Optional.of(itemRequest));
         when(requestMapper.toRequestDto(any())).thenReturn(itemRequestDto);
-        when(userService.findUserById(anyLong())).thenReturn(requstorDto);
+        when(userService.findUserById(anyLong())).thenReturn(requesterDto);
         when(itemRepository.findByRequestId(anyLong())).thenReturn(List.of(item));
         when(itemMapper.toItemDto(any())).thenReturn(itemDto);
-        List<ItemRequestDto> itemRequestDtoList = requestService.findAllRequestsForAnswer(requestorId, 0, 1);
+        List<ItemRequestDto> itemRequestDtoList = requestService.findAllRequestsForAnswer(requesterId, 0, 1);
 
         assertEquals(1, itemRequestDtoList.size());
     }

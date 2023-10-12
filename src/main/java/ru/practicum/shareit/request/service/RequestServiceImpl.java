@@ -13,11 +13,11 @@ import ru.practicum.shareit.request.dto.ItemRequestDto;
 import ru.practicum.shareit.request.dto.RequestMapper;
 import ru.practicum.shareit.request.model.ItemRequest;
 import ru.practicum.shareit.request.repository.RequestRepository;
+import ru.practicum.shareit.user.dto.UserMapper;
 import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.repository.UserRepository;
 import ru.practicum.shareit.user.service.UserService;
 
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -32,14 +32,12 @@ public class RequestServiceImpl implements RequestService {
     private final RequestRepository requestRepository;
     private final ItemRepository itemRepository;
     private final ItemMapper itemMapper;
+    private final UserMapper userMapper;
 
     @Override
     public ItemRequestDto create(ItemRequestDto requestDto, long requesterId) {
-        userService.findUserById(requesterId);
         User requester = userRepository.findById(requesterId).orElseThrow(
                 () -> new NotFoundException("Пользователь с id " + requesterId + " не найден."));
-        LocalDateTime now = LocalDateTime.now();
-        requestDto.setCreated(now);
         ItemRequest itemRequest = requestMapper.toRequest(requestDto, requester);
         return requestMapper.toRequestDto(requestRepository.save(itemRequest));
     }
@@ -49,16 +47,8 @@ public class RequestServiceImpl implements RequestService {
         userService.findUserById(userId);
         ItemRequest itemRequest = requestRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Запрос не найден."));
-        long requestId = itemRequest.getId();
-        ItemRequestDto itemRequestDto = requestMapper.toRequestDto(itemRequest);
-        itemRequestDto.setRequester(userService.findUserById(itemRequest.getRequester().getId()));
-        List<ItemDto> itemDtoList = itemRepository.findByRequestId(requestId).stream()
-                .map(itemMapper::toItemDto)
-                .collect(Collectors.toList());
-        itemRequestDto.setItems(itemDtoList);
-        return itemRequestDto;
+        return getDtoFromRequest(itemRequest);
     }
-
 
     @Override
     public List<ItemRequestDto> findAllFromUser(long requesterId) {
@@ -78,9 +68,19 @@ public class RequestServiceImpl implements RequestService {
     private List<ItemRequestDto> getItemRequestDtoList(List<ItemRequest> itemRequestList) {
         List<ItemRequestDto> itemRequestDtoList = new ArrayList<>();
         for (ItemRequest itemRequest : itemRequestList) {
-            ItemRequestDto itemRequestDto = findById(itemRequest.getId(), itemRequest.getRequester().getId());
+            ItemRequestDto itemRequestDto = getDtoFromRequest(itemRequest);
             itemRequestDtoList.add(itemRequestDto);
         }
         return itemRequestDtoList;
+    }
+
+    private ItemRequestDto getDtoFromRequest(ItemRequest itemRequest) {
+        ItemRequestDto itemRequestDto = requestMapper.toRequestDto(itemRequest);
+        itemRequestDto.setRequester(userMapper.toUserDto(itemRequest.getRequester()));
+        List<ItemDto> itemDtoList = itemRepository.findByRequestId(itemRequest.getId()).stream()
+                .map(itemMapper::toItemDto)
+                .collect(Collectors.toList());
+        itemRequestDto.setItems(itemDtoList);
+        return itemRequestDto;
     }
 }
