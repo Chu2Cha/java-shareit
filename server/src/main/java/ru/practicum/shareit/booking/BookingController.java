@@ -49,10 +49,10 @@ public class BookingController {
     }
 
     @PatchMapping("/{bookingId}")
-    public OutBookingDto update(@RequestHeader(BOOKER_ID) long bookerId,
+    public OutBookingDto update(@RequestHeader(BOOKER_ID) long ownerId,
                                 @PathVariable long bookingId,
                                 @RequestParam Boolean approved) {
-        return bookingService.approve(bookingId, bookerId, approved);
+        return bookingService.approve(ownerId, bookingId, approved);
     }
 
 }
