@@ -51,7 +51,7 @@ public class ItemClient extends BaseClient {
     }
 
     public ResponseEntity<Object> searchItems(String text, Long ownerId,
-                                             int from, int size) {
+                                              int from, int size) {
         Map<String, Object> parameters = Map.of(
                 "text", text,
                 "from", from,
@@ -61,8 +61,8 @@ public class ItemClient extends BaseClient {
     }
 
     public ResponseEntity<Object> createComment(Long itemId, Long ownerId,
-                                                CommentDto commentDto){
-        return post("/"+itemId + "/comment", ownerId, commentDto);
+                                                CommentDto commentDto) {
+        return post("/" + itemId + "/comment", ownerId, commentDto);
     }
 
 

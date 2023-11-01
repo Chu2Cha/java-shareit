@@ -10,8 +10,6 @@ import ru.practicum.shareit.item.comment.dto.CommentDto;
 import ru.practicum.shareit.item.dto.ItemDto;
 import ru.practicum.shareit.validation.CreateValidation;
 
-import java.util.List;
-
 @Controller
 @RequestMapping(path = "/items")
 @RequiredArgsConstructor
@@ -42,30 +40,30 @@ public class ItemController {
 
     @GetMapping
     public ResponseEntity<Object> getAllItemsFromUser(@RequestHeader(OWNER_ID) long ownerId,
-                                             @RequestParam(defaultValue = "0") int from,
-                                             @RequestParam(defaultValue = "10") int size) {
+                                                      @RequestParam(defaultValue = "0") int from,
+                                                      @RequestParam(defaultValue = "10") int size) {
         return itemClient.getAllItemsFromUser(ownerId, from, size);
     }
 
     @PatchMapping("/{id}")
     public ResponseEntity<Object> updateItem(@RequestBody ItemDto itemDto,
-                              @PathVariable("id") long id,
-                              @RequestHeader(OWNER_ID) long ownerId) {
+                                             @PathVariable("id") long id,
+                                             @RequestHeader(OWNER_ID) long ownerId) {
         return itemClient.updateItem(itemDto, id, ownerId);
     }
 
     @GetMapping("/search")
     public ResponseEntity<Object> searchItem(@RequestParam("text") String message,
-                                    @RequestHeader(OWNER_ID) long ownerId,
-                                    @RequestParam(defaultValue = "0") int from,
-                                    @RequestParam(defaultValue = "10") int size) {
+                                             @RequestHeader(OWNER_ID) long ownerId,
+                                             @RequestParam(defaultValue = "0") int from,
+                                             @RequestParam(defaultValue = "10") int size) {
         return itemClient.searchItems(message, ownerId, from, size);
     }
 
     @PostMapping("/{itemId}/comment")
     public ResponseEntity<Object> createComment(@PathVariable("itemId") long itemId,
-                                    @RequestHeader(OWNER_ID) long userId,
-                                    @RequestBody CommentDto commentDto) {
+                                                @RequestHeader(OWNER_ID) long userId,
+                                                @RequestBody CommentDto commentDto) {
         return itemClient.createComment(itemId, userId, commentDto);
     }
 }
