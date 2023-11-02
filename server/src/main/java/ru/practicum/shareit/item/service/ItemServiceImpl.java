@@ -124,9 +124,6 @@ public class ItemServiceImpl implements ItemService {
 
     @Override
     public CommentDto addComment(long itemId, long userId, CommentDto commentDto) {
-        if (commentDto.getText().isEmpty()) {
-            throw new BadRequestException("Ошибка: пустой комментарий!");
-        }
         Item item = itemMapper.toItem(findById(itemId, userId));
         User author = userMapper.toUser(userService.findUserById(userId));
         LocalDateTime now = LocalDateTime.now();

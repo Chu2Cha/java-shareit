@@ -43,12 +43,6 @@ public class BookingServiceImpl implements BookingService {
         userService.findUserById(bookerId);
         User booker = userRepository.findById(bookerId).orElseThrow(
                 () -> new NotFoundException("Пользователь с id " + bookerId + " не найден."));
-        if (inBookingDto.getEnd().isBefore(inBookingDto.getStart())) {
-            throw new BadRequestException("Дата окончания бронирования раньше начала бронирования!");
-        }
-        if (inBookingDto.getEnd().isEqual(inBookingDto.getStart())) {
-            throw new BadRequestException("Время начала и окончания бронировая совпадают!");
-        }
         Item item = itemRepository.findById(inBookingDto.getItemId()).orElseThrow(
                 () -> new NotFoundException("Предмет с id " + inBookingDto.getItemId() + " не найден."));
         if (item.getOwnerId() == bookerId) {
@@ -102,10 +96,6 @@ public class BookingServiceImpl implements BookingService {
         List<Booking> bookingList;
         Pageable page = PageRequest.of(from / size, size);
         switch (state) {
-            case "ALL":
-                bookingList = bookingRepository
-                        .findAllByBookerIdOrderByEndDesc(bookerId, page);
-                break;
             case "CURRENT":
                 bookingList = bookingRepository
                         .findAllByBookerIdAndStartIsBeforeAndEndIsAfterOrderByEndDesc(bookerId, now, now, page);
@@ -126,15 +116,13 @@ public class BookingServiceImpl implements BookingService {
                 bookingList = bookingRepository
                         .findAllByBookerIdAndStatusOrderByEndDesc(bookerId, BookingStatus.REJECTED, page);
                 break;
-            default:
-                throw new BadRequestException("Unknown state: UNSUPPORTED_STATUS");
-
+            default: //ALL
+                bookingList = bookingRepository
+                        .findAllByBookerIdOrderByEndDesc(bookerId, page);
         }
         return bookingList.stream()
                 .map(this::buildOutBookingDto)
                 .collect(Collectors.toList());
-
-
     }
 
     @Override
@@ -144,10 +132,6 @@ public class BookingServiceImpl implements BookingService {
         Pageable page = PageRequest.of(from / size, size);
         List<Booking> bookingList;
         switch (state) {
-            case "ALL":
-                bookingList = bookingRepository
-                        .findByItemOwnerIdOrderByEndDesc(ownerId, page);
-                break;
             case "CURRENT":
                 bookingList = bookingRepository
                         .findAllByItemOwnerIdAndStartIsBeforeAndEndIsAfterOrderByEndDesc(ownerId, now, now, page);
@@ -168,9 +152,9 @@ public class BookingServiceImpl implements BookingService {
                 bookingList = bookingRepository
                         .findAllByItemOwnerIdAndStatusOrderByEndDesc(ownerId, BookingStatus.REJECTED, page);
                 break;
-            default:
-                throw new BadRequestException("Unknown state: UNSUPPORTED_STATUS");
-
+            default: //ALL
+                bookingList = bookingRepository
+                        .findByItemOwnerIdOrderByEndDesc(ownerId, page);
         }
         return bookingList.stream()
                 .map(this::buildOutBookingDto)
